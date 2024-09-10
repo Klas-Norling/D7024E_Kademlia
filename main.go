@@ -5,6 +5,9 @@ package main
 import (
 	"d7024e/kademlia"
 	"fmt"
+	"math/rand"
+	"strconv"
+	"time"
 )
 
 func main() {
@@ -14,4 +17,27 @@ func main() {
 	contact := kademlia.NewContact(id, "localhost:8000")
 	fmt.Println(contact.String())
 	fmt.Printf("%v\n", contact)
+	generateNodes(contact)
 }
+
+func generateNodes(contact kademlia.Contact) {
+	nodeId := generateRandomID(int64(rand.Intn(100)), 160)
+	id := kademlia.NewKademliaID(nodeId)
+
+	bucket := kademlia.NewBucket()
+	bucket.AddContact(contact)
+	fmt.Println("Node id ")
+	fmt.Printf("%v\n", nodeId)
+}
+
+func generateRandomID(seed int64, binLength int) string {
+	id := ""
+	rand.Seed(time.Now().UnixNano() - seed)
+	for i := 0; i < binLength; i++ {
+		id += strconv.Itoa(rand.Intn(2))
+	}
+
+	return id
+}
+
+func sendMessage()
