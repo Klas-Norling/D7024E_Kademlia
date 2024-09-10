@@ -7,7 +7,16 @@
 
 version: "3"
 services:
+  root_node:
+    image: kadlab:latest
+    ports:
+      - "4000:80" 
+    networks:
+      kademlia_network:
+        ipv4_address: 172.17.0.10
+
   kademliaNodes:
+    build: .
     image: kadlab:latest # Make sure your Docker image has this name.
     stdin_open: true
     tty: true
@@ -28,6 +37,12 @@ services:
     networks:
       - kademlia_network
       
+      
 networks:
   kademlia_network:
+    driver: bridge
+    ipam: 
+      config: 
+        - subnet: 172.17.0.1/24
+          
 
