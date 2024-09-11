@@ -8,7 +8,7 @@
 version: "3"
 services:
   root_node:
-    image: nginx
+    image: kadlab
     networks:
       kademlia_network:
         ipv4_address: 172.16.238.10
@@ -17,7 +17,7 @@ services:
 
 
   kademlia_nodes:
-    image: nginx # Make sure your Docker image has this name.
+    image: kadlab # Make sure your Docker image has this name.
     deploy:
       mode: replicated
       replicas: 5  

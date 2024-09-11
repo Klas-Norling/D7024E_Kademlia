@@ -1,5 +1,8 @@
 FROM alpine:latest
 
+# Use an official Ubuntu base image
+FROM ubuntu:latest
+
 # Add the commands needed to put your compiled go binary in the container and
 # run it when the container starts.
 #
@@ -11,3 +14,6 @@ FROM alpine:latest
 # "kadlab", which you do by using the following command:
 #
 # $ docker build . -t kadlab
+
+# Command to keep the container running
+CMD tail -f /dev/null
