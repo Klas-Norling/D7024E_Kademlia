@@ -26,7 +26,7 @@ func generateNodes(contact kademlia.Contact) {
 
 	bucket := kademlia.NewBucket()
 	bucket.AddContact(contact)
-	fmt.Println("Node id ")
+	fmt.Println("Node id ", id)
 	fmt.Printf("%v\n", nodeId)
 }
 
@@ -39,5 +39,3 @@ func generateRandomID(seed int64, binLength int) string {
 
 	return id
 }
-
-func sendMessage()
