@@ -35,11 +35,11 @@ RUN go build -o /godocker
 # Specifies the executable command that runs when the container starts
 #CMD [ “/godocker” ]
 
-# CMD /godocker
+ CMD /godocker
 
 
 
 # Command to keep the container running
-CMD tail -f /dev/null
+#CMD tail -f /dev/null
 
 #CMD go run main.go

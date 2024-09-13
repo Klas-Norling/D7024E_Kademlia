@@ -17,6 +17,8 @@ import (
 )
 
 func main() {
+
+	time.Sleep(1 * time.Second)
 	fmt.Println("Pretending to run the kademlia app...")
 	// Using stuff from the kademlia package here. Something like...
 	// contact := kademlia.NewContact(id, "localhost:8000")
@@ -31,14 +33,18 @@ func main() {
 	hostname, err := os.Hostname()
 	fmt.Println("Hostname: ", hostname, "Error: ", err)
 
-	// Hashes the hostname to 160 bits (in hex)
-	hash := sha1.New()
-	hash.Write([]byte(hostname))
-	sha1_hash := hex.EncodeToString(hash.Sum(nil))
-	fmt.Println("Hashed hostname: ", sha1_hash)
-
 	addrs, err := net.InterfaceAddrs()
 	fmt.Println("ip: ", addrs, "err: ", err)
+
+	// Hashes the hostname to 160 bits (in hex)
+
+	hash := sha1.New()
+	hash.Write([]byte(string(hostname)))
+	sha1_hash := hex.EncodeToString(hash.Sum(nil))
+	fmt.Println("Hashed hostname: ", sha1_hash)
+	hostid, err := net.LookupIP(hostname)
+
+	fmt.Println("ipaddress: ", hostid)
 
 }
 
