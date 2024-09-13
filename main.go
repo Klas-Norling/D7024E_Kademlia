@@ -3,9 +3,15 @@
 package main
 
 import (
+	"crypto/sha1"
 	"d7024e/kademlia"
+	"encoding/hex"
 	"fmt"
+
+	// "math/big"
 	"math/rand"
+	"net"
+	"os"
 	"strconv"
 	"time"
 )
@@ -13,11 +19,27 @@ import (
 func main() {
 	fmt.Println("Pretending to run the kademlia app...")
 	// Using stuff from the kademlia package here. Something like...
-	id := kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000")
-	contact := kademlia.NewContact(id, "localhost:8000")
-	fmt.Println(contact.String())
-	fmt.Printf("%v\n", contact)
-	generateNodes(contact)
+	// contact := kademlia.NewContact(id, "localhost:8000")
+
+	//bucket := kademlia.NewBucket()
+	//bucket.AddContact()
+
+	// fmt.Println(contact.String())
+	// fmt.Printf("%v\n", contact)
+	// generateNodes(contact)
+
+	hostname, err := os.Hostname()
+	fmt.Println("Hostname: ", hostname, "Error: ", err)
+
+	// Hashes the hostname to 160 bits (in hex)
+	hash := sha1.New()
+	hash.Write([]byte(hostname))
+	sha1_hash := hex.EncodeToString(hash.Sum(nil))
+	fmt.Println("Hashed hostname: ", sha1_hash)
+
+	addrs, err := net.InterfaceAddrs()
+	fmt.Println("ip: ", addrs, "err: ", err)
+
 }
 
 func generateNodes(contact kademlia.Contact) {

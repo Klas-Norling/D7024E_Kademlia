@@ -14,8 +14,7 @@ services:
         ipv4_address: 172.16.238.10
     ports:
       - 8080:8080
-
-
+ 
   kademlia_nodes:
     image: kadlab # Make sure your Docker image has this name.
     deploy:
