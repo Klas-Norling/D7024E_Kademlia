@@ -18,7 +18,7 @@ import (
 
 func main() {
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(400 * time.Second)
 	fmt.Println("Pretending to run the kademlia app...")
 	// Using stuff from the kademlia package here. Something like...
 	// contact := kademlia.NewContact(id, "localhost:8000")
