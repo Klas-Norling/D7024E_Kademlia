@@ -33,19 +33,28 @@ func main() {
 	hostname, err := os.Hostname()
 	fmt.Println("Hostname: ", hostname, "Error: ", err)
 
-	addrs, err := net.InterfaceAddrs()
-	fmt.Println("ip: ", addrs, "err: ", err)
+	//addrs, err := net.InterfaceAddrs()
+	//fmt.Println("ip: ", addrs, "err: ", err)
 
 	// Hashes the hostname to 160 bits (in hex)
 
 	hash := sha1.New()
+	hashed_addrs := sha1.New()
+	hashed_addrs.Write([]byte(string("172.16.238.10")))
 	hash.Write([]byte(string(hostname)))
 	sha1_hash := hex.EncodeToString(hash.Sum(nil))
+	sha1_addrs := hex.EncodeToString(hashed_addrs.Sum(nil))
 	fmt.Println("Hashed hostname: ", sha1_hash)
+	fmt.Println("Hashed ipaddress: ", sha1_addrs)
+	id := kademlia.NewKademliaID(sha1_addrs)
+	contact := kademlia.NewContact(id, "172.16.238.10:8080")
+	fmt.Println("Hashed ipaddress: ", contact)
 	hostid, err := net.LookupIP(hostname)
+	varnetlook, err := net.LookupPort("ip", "http")
+	fmt.Println("what port: ", varnetlook)
 
-	fmt.Println("ipaddress: ", hostid)
-
+	fmt.Println("ipaddress: ", hostid[0])
+	time.Sleep(500 * time.Second)
 }
 
 func generateNodes(contact kademlia.Contact) {
