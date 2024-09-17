@@ -73,7 +73,7 @@ func handleConnection(conn net.Conn) {
 	defer conn.Close()
 }
 
-func (network *Network) SendPingMessage(contact *Contact) {
+func SendPingMessage(contact *Contact) {
 	conn, err := net.Dial("tcp", contact.Address)
 	if err != nil {
 		fmt.Println("Error caught: ", err)
