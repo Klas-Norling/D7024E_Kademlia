@@ -17,8 +17,7 @@ import (
 )
 
 func main() {
-
-	time.Sleep(400 * time.Second)
+	time.Sleep(1 * time.Second)
 	fmt.Println("Pretending to run the kademlia app...")
 	// Using stuff from the kademlia package here. Something like...
 	// contact := kademlia.NewContact(id, "localhost:8000")
@@ -46,15 +45,27 @@ func main() {
 	sha1_addrs := hex.EncodeToString(hashed_addrs.Sum(nil))
 	fmt.Println("Hashed hostname: ", sha1_hash)
 	fmt.Println("Hashed ipaddress: ", sha1_addrs)
+	hostid, err := net.LookupIP(hostname)
+
 	id := kademlia.NewKademliaID(sha1_addrs)
 	contact := kademlia.NewContact(id, "172.16.238.10:8080")
+
+	//id2 := kademlia.NewKademliaID(sha1_hash)
+	ip_array := string(hostid[0])
+	last_number := ip_array[len(ip_array)-1]
+	fmt.Println("ip array: ", ip_array, "last number: ", last_number)
+	port := "808" + fmt.Sprintf("%v", last_number)
+	address := fmt.Sprintf("%v", hostid[0]) + port
+	fmt.Println("port: ", port)
+	fmt.Println("Address: ", address)
+	//contact2 := kademlia.NewContact(id2, address)
+
+	fmt.Println(hostid)
+
 	fmt.Println("Hashed ipaddress: ", contact)
-	hostid, err := net.LookupIP(hostname)
-	varnetlook, err := net.LookupPort("ip", "http")
-	fmt.Println("what port: ", varnetlook)
 
 	fmt.Println("ipaddress: ", hostid[0])
-	time.Sleep(500 * time.Second)
+	time.Sleep(50 * time.Second)
 }
 
 func generateNodes(contact kademlia.Contact) {

@@ -20,10 +20,6 @@ services:
     deploy:
       mode: replicated
       replicas: 5  
-    environment:
-      - PUBLIC_PORT=${PORT}
-    ports: 
-      - "${PORT}:8080"
     networks:
       - kademlia_network
       
@@ -33,12 +29,3 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24  # Manually configure the subnet for static IPs
-
-kademlia_nodes:
-    image: kadlab # Make sure your Docker image has this name.
-    deploy:
-      mode: replicated
-      replicas: 5  
-    ports: 
-      - "4006-4010"
-
