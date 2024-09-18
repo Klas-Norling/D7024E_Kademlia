@@ -20,24 +20,33 @@ func main() {
 	//generate hash for root node
 	time.Sleep(1 * time.Second)
 	fmt.Println("Pretending to run the kademlia app...")
-	id_Root_Node := kademlia.NewKademliaID(generateHashForRootNode())
 
-	//generate a contact to the rootnode
-	contact_RootNode := kademlia.NewContact(id_Root_Node, "172.16.238.10:8080")
+	if returnIpAddress() == "172.16.238.10:8090" {
+		// save contacts/create contacts
 
-	//generate hash and create contact for our node.
-	id_forOurNode := kademlia.NewKademliaID(generateHashforNode())
-	contact_OurNode := kademlia.NewContact(id_forOurNode, returnIpAddress())
+		kademlia.Listen("172.16.238.10", 8080)
+	} else {
 
-	//create a routing table for our node that has the root node and our node
-	rt := kademlia.NewRoutingTable(contact_OurNode)
-	rt.AddContact(contact_RootNode)
+		id_Root_Node := kademlia.NewKademliaID(generateHashForRootNode())
 
-	test(&contact_RootNode)
+		//generate a contact to the rootnode
+		contact_RootNode := kademlia.NewContact(id_Root_Node, "172.16.238.10:8080")
+
+		//generate hash and create contact for our node.
+		id_forOurNode := kademlia.NewKademliaID(generateHashforNode())
+		contact_OurNode := kademlia.NewContact(id_forOurNode, returnIpAddress())
+
+		//create a routing table for our node that has the root node and our node
+		rt := kademlia.NewRoutingTable(contact_OurNode)
+		rt.AddContact(contact_RootNode)
+
+		test(&contact_RootNode, &contact_OurNode)
+
+	}
 
 }
 
-func test(contact *kademlia.Contact) {
+func test(contact_root *kademlia.Contact, contact_own *kademlia.Contact) {
 	fmt.Println(returnIpAddress())
 	if returnIpAddress() == "172.16.238.10:8090" {
 		//listen
@@ -45,7 +54,7 @@ func test(contact *kademlia.Contact) {
 		kademlia.Listen("172.16.238.10", 8080)
 	} else {
 		time.Sleep(1 * time.Second)
-		kademlia.SendPingMessage(contact)
+		kademlia.SendPingMessage(contact_root, contact_own)
 
 	}
 

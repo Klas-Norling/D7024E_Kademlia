@@ -28,3 +28,8 @@ func TestRoutingTable(t *testing.T) {
 		t.Fatalf("Expected 6 contacts but instead got %d", len(contacts))
 	}
 }
+
+func startup_routingTable(me Contact) {
+	rt := NewRoutingTable(me)
+	rt.AddContact(NewContact(NewKademliaID("eb70d2b212be125aaa890c4082f44084d5a00180"), "172.16.238.10:8001"))
+}

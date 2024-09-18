@@ -36,7 +36,7 @@ func Listen(ip string, port int) {
 
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, array *[]string) (connection net.Conn) {
 	// handle incoming messages here
 	fmt.Println("Connection accepted from", conn.RemoteAddr().String())
 
@@ -69,19 +69,37 @@ func handleConnection(conn net.Conn) {
 
 	// log bytes read
 	fmt.Printf("READ  %d bytes\n", length)
-
-	defer conn.Close()
+	return conn
+	// defer conn.Close()
 }
 
-func SendPingMessage(contact *Contact) {
-	conn, err := net.Dial("tcp", contact.Address)
+func SendPingMessage(contact_root *Contact, contact_own *Contact) {
+
+	ip, port := getIpPort(contact_own.Address)
+	fmt.Println(ip, port)
+
+	dialer := &net.Dialer{
+		LocalAddr: &net.TCPAddr{
+			IP:   net.ParseIP(ip),
+			Port: port,
+		},
+	}
+
+	conn, err := dialer.Dial("tcp", contact_root.Address)
 	if err != nil {
 		fmt.Println("Error caught: ", err)
 		defer conn.Close()
 	}
 
 	fmt.Println("Connection was established to: ", conn.RemoteAddr())
+}
 
+func getIpPort(address string) (ip string, port int) {
+	port_number, err := strconv.Atoi(address[len(address)-4:])
+	UNUSED(err)
+	ip_address := address[:len(address)-5]
+	fmt.Println("port number: ", port_number, "ip_address: ", ip_address)
+	return ip_address, port_number
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
@@ -95,3 +113,5 @@ func (network *Network) SendFindDataMessage(hash string) {
 func (network *Network) SendStoreMessage(data []byte) {
 	// TODO
 }
+
+func UNUSED(x ...interface{}) {}
