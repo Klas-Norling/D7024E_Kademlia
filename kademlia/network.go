@@ -10,7 +10,7 @@ import (
 type Network struct {
 }
 
-func Listen(ip string, port int) {
+func Listen(ip string, port int, numberofreplicas *int) {
 	ln, err := net.Listen("tcp", ip+":"+strconv.Itoa(port))
 
 	if err != nil {
@@ -31,14 +31,20 @@ func Listen(ip string, port int) {
 			continue
 		}
 		// Handle client connection in a goroutine
-		go handleConnection(conn)
+		go handleConnection(conn, numberofreplicas)
 	}
 
 }
 
-func handleConnection(conn net.Conn, array *[]string) (connection net.Conn) {
+func handleConnection(conn net.Conn, numberofreplicas *int) {
 	// handle incoming messages here
 	fmt.Println("Connection accepted from", conn.RemoteAddr().String())
+
+	*numberofreplicas += 1
+
+	address := conn.RemoteAddr().String()
+	id := NewKademliaID(generateHashforNode(address))
+	NewContact(id, address)
 
 	tmp := make([]byte, 1024)
 	data := make([]byte, 0)
@@ -69,8 +75,8 @@ func handleConnection(conn net.Conn, array *[]string) (connection net.Conn) {
 
 	// log bytes read
 	fmt.Printf("READ  %d bytes\n", length)
-	return conn
-	// defer conn.Close()
+	//return conn
+	defer conn.Close()
 }
 
 func SendPingMessage(contact_root *Contact, contact_own *Contact) {
