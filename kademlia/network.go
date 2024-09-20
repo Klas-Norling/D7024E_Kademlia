@@ -10,7 +10,7 @@ import (
 type Network struct {
 }
 
-func Listen(ip string, port int, numberofreplicas *int) {
+func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 	ln, err := net.Listen("tcp", ip+":"+strconv.Itoa(port))
 
 	if err != nil {
@@ -31,20 +31,27 @@ func Listen(ip string, port int, numberofreplicas *int) {
 			continue
 		}
 		// Handle client connection in a goroutine
-		go handleConnection(conn, numberofreplicas)
+		go handleConnection(conn, numberofreplicas, rt)
 	}
 
 }
 
-func handleConnection(conn net.Conn, numberofreplicas *int) {
+func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 	// handle incoming messages here
 	fmt.Println("Connection accepted from", conn.RemoteAddr().String())
 
 	*numberofreplicas += 1
+	fmt.Println("Number of replicas: ", *numberofreplicas)
 
 	address := conn.RemoteAddr().String()
 	id := NewKademliaID(generateHashforNode(address))
-	NewContact(id, address)
+	contact := NewContact(id, address)
+	rt.AddContact(contact)
+
+	contacts := rt.FindClosestContacts(NewKademliaID("2111111400000000000000000000000000000000"), 20)
+	for i := range contacts {
+		fmt.Println("In for loop contacts: ", contacts[i].String())
+	}
 
 	tmp := make([]byte, 1024)
 	data := make([]byte, 0)

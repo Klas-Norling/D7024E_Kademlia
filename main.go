@@ -23,8 +23,14 @@ func main() {
 
 	if returnIpAddress() == "172.16.238.10:8090" {
 		// save contacts/create contacts
+		// routing table needs to store contacts
+		numberofreplicas := 0
 
-		kademlia.Listen("172.16.238.10", 8080)
+		root_id := kademlia.NewKademliaID(generateHashForRootNode())
+		contact := kademlia.NewContact(root_id, "172.16.238.10:8080")
+		rt := kademlia.NewRoutingTable(contact)
+
+		kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
 	} else {
 
 		id_Root_Node := kademlia.NewKademliaID(generateHashForRootNode())
@@ -51,7 +57,7 @@ func test(contact_root *kademlia.Contact, contact_own *kademlia.Contact) {
 	if returnIpAddress() == "172.16.238.10:8090" {
 		//listen
 
-		kademlia.Listen("172.16.238.10", 8080)
+		// kademlia.Listen("172.16.238.10", 8080)
 	} else {
 		time.Sleep(1 * time.Second)
 		kademlia.SendPingMessage(contact_root, contact_own)
