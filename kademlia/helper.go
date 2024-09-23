@@ -39,3 +39,14 @@ func returnIpAddress() string {
 
 	return address
 }
+
+func generateHashForRootNode() string {
+	//hash our ip address
+	hashed_addrs := sha1.New()
+	hashed_addrs.Write([]byte(string("172.16.238.10")))
+	sha1_addrs := hex.EncodeToString(hashed_addrs.Sum(nil))
+	return sha1_addrs
+
+}
+
+func UNUSED(x ...interface{}) {}

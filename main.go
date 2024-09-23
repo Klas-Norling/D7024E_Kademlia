@@ -48,7 +48,8 @@ func main() {
 		rt.AddContact(contact_RootNode)
 
 		// test(&contact_RootNode, &contact_OurNode)
-		kademlia.Join("172.16.238.10:8080")
+
+		kademlia.Join("172.16.238.10:8080", rt)
 
 	}
 
@@ -164,7 +165,7 @@ func returnIpAddress() string {
 	address := fmt.Sprintf("%v:", hostid[0]) + fmt.Sprintf("%v", port)
 
 	UNUSED(err1, err)
-
+	fmt.Println("IPADDRESS: ", address)
 	return address
 }
 

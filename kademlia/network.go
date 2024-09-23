@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 )
 
 type Network struct {
@@ -46,6 +47,7 @@ func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 	address := conn.RemoteAddr().String()
 	id := NewKademliaID(generateHashforNode(address))
 	contact := NewContact(id, address)
+
 	rt.AddContact(contact)
 
 	contacts := rt.FindClosestContacts(NewKademliaID("2111111400000000000000000000000000000000"), 20)
@@ -60,9 +62,20 @@ func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 		fmt.Println("Error caught: ", err)
 		defer conn.Close()
 	} else {
-		fmt.Println("Read from connection: ", n)
-		myString := string(n)
-		fmt.Println(myString)
+		// Convert the bytes read to a string
+		receivedString := string(tmp[:n])
+		fmt.Println("Received from connection:", receivedString)
+		return_rt := rt.FindClosestContacts(NewKademliaID("2111111400000000000000000000000000000000"), 20)
+		for i := range return_rt {
+			fmt.Println(return_rt[i].Address)
+			fmt.Println("hello")
+			if return_rt[i].Address == "172.16.238.10:8080" || rt.me.Address == "172.16.238.10:8080" {
+
+				fmt.Println("hello")
+				conn.Write([]byte("joined"))
+				break
+			}
+		}
 	}
 
 	//return conn
@@ -98,9 +111,10 @@ func getIpPort(address string) (ip string, port int) {
 	return ip_address, port_number
 }
 
-func Join(src_address string) {
+func Join(dst_address string, rt *RoutingTable) {
 	address := returnIpAddress()
 	ip, port := getIpPort(address)
+	fmt.Println("address: ", address, " Port: ", port)
 
 	dialer := &net.Dialer{
 		LocalAddr: &net.TCPAddr{
@@ -109,7 +123,7 @@ func Join(src_address string) {
 		},
 	}
 
-	conn, err := dialer.Dial("tcp", src_address)
+	conn, err := dialer.Dial("tcp", dst_address)
 
 	if err != nil {
 		fmt.Println("Error caught: ", err)
@@ -119,6 +133,29 @@ func Join(src_address string) {
 		fmt.Println("Connection established to: ", conn.RemoteAddr().String())
 
 		conn.Write([]byte("join"))
+		tmp := make([]byte, 1024)
+		time.Sleep(3 * time.Second)
+		n, err := conn.Read(tmp)
+		fmt.Println(n)
+		receivedString := string(tmp[:n])
+		fmt.Println("Received from connection:", receivedString)
+		if receivedString == "joined" {
+			id_Root_Node := NewKademliaID(generateHashForRootNode())
+
+			//generate a contact to the rootnode
+			contact_RootNode := NewContact(id_Root_Node, "172.16.238.10:8080")
+			UNUSED(contact_RootNode)
+			rt.AddContact(contact_RootNode)
+		}
+
+		UNUSED(err)
+		//
+		return_rt := rt.FindClosestContacts(NewKademliaID("2111111400000000000000000000000000000000"), 20)
+		for i := range return_rt {
+			fmt.Println("CURRENT CONTACTS: ", return_rt[i].Address)
+			fmt.Println("hello")
+		}
+
 		defer conn.Close()
 	}
 
@@ -135,5 +172,3 @@ func (network *Network) SendFindDataMessage(hash string) {
 func (network *Network) SendStoreMessage(data []byte) {
 	// TODO
 }
-
-func UNUSED(x ...interface{}) {}
