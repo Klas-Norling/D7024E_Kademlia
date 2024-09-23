@@ -2,7 +2,6 @@ package kademlia
 
 import (
 	"fmt"
-	"io"
 	"net"
 	"strconv"
 )
@@ -31,6 +30,7 @@ func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 			continue
 		}
 		// Handle client connection in a goroutine
+
 		go handleConnection(conn, numberofreplicas, rt)
 	}
 
@@ -54,34 +54,17 @@ func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 	}
 
 	tmp := make([]byte, 1024)
-	data := make([]byte, 0)
-	length := 0
 	n, err := conn.Read(tmp)
 
-	// loop through the connection stream, appending tmp to data
-	for {
-		// read to the tmp var
-		n, err := conn.Read(tmp)
-		if err != nil {
-			// log if not normal error
-			if err != io.EOF {
-				fmt.Printf("Read error - %s\n", err)
-			}
-			break
-		}
-
-		// append read data to full data
-		data = append(data, tmp[:n]...)
-
-		// update total read var
-		length += n
+	if err != nil {
+		fmt.Println("Error caught: ", err)
+		defer conn.Close()
+	} else {
+		fmt.Println("Read from connection: ", n)
+		myString := string(n)
+		fmt.Println(myString)
 	}
 
-	fmt.Println(data)
-	fmt.Println(n, err)
-
-	// log bytes read
-	fmt.Printf("READ  %d bytes\n", length)
 	//return conn
 	defer conn.Close()
 }
@@ -113,6 +96,32 @@ func getIpPort(address string) (ip string, port int) {
 	ip_address := address[:len(address)-5]
 	fmt.Println("port number: ", port_number, "ip_address: ", ip_address)
 	return ip_address, port_number
+}
+
+func Join(src_address string) {
+	address := returnIpAddress()
+	ip, port := getIpPort(address)
+
+	dialer := &net.Dialer{
+		LocalAddr: &net.TCPAddr{
+			IP:   net.ParseIP(ip),
+			Port: port,
+		},
+	}
+
+	conn, err := dialer.Dial("tcp", src_address)
+
+	if err != nil {
+		fmt.Println("Error caught: ", err)
+		defer conn.Close()
+
+	} else {
+		fmt.Println("Connection established to: ", conn.RemoteAddr().String())
+
+		conn.Write([]byte("join"))
+		defer conn.Close()
+	}
+
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {

@@ -18,12 +18,13 @@ import (
 
 func main() {
 	//generate hash for root node
-	time.Sleep(1 * time.Second)
+
 	fmt.Println("Pretending to run the kademlia app...")
 
 	if returnIpAddress() == "172.16.238.10:8090" {
 		// save contacts/create contacts
 		// routing table needs to store contacts
+
 		numberofreplicas := 0
 
 		root_id := kademlia.NewKademliaID(generateHashForRootNode())
@@ -32,7 +33,7 @@ func main() {
 
 		kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
 	} else {
-
+		time.Sleep(1 * time.Second)
 		id_Root_Node := kademlia.NewKademliaID(generateHashForRootNode())
 
 		//generate a contact to the rootnode
@@ -46,7 +47,8 @@ func main() {
 		rt := kademlia.NewRoutingTable(contact_OurNode)
 		rt.AddContact(contact_RootNode)
 
-		test(&contact_RootNode, &contact_OurNode)
+		// test(&contact_RootNode, &contact_OurNode)
+		kademlia.Join("172.16.238.10:8080")
 
 	}
 
