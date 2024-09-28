@@ -20,38 +20,47 @@ func main() {
 	//generate hash for root node
 
 	fmt.Println("Pretending to run the kademlia app...")
+	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000")
+	rt := kademlia.NewRoutingTable(me)
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("eb70d2b212be125aaa890c4082f44084d5a00180"), "172.16.238.10:8001"))
+	addcontacts(rt)
 
-	if returnIpAddress() == "172.16.238.10:8090" {
-		// save contacts/create contacts
-		// routing table needs to store contacts
+	go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+	go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+	go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
 
-		numberofreplicas := 0
+	/*
+		if returnIpAddress() == "172.16.238.10:8090" {
+			// save contacts/create contacts
+			// routing table needs to store contacts
 
-		root_id := kademlia.NewKademliaID(generateHashForRootNode())
-		contact := kademlia.NewContact(root_id, "172.16.238.10:8080")
-		rt := kademlia.NewRoutingTable(contact)
+			numberofreplicas := 0
 
-		kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
-	} else {
-		time.Sleep(1 * time.Second)
-		id_Root_Node := kademlia.NewKademliaID(generateHashForRootNode())
+			root_id := kademlia.NewKademliaID(generateHashForRootNode())
+			contact := kademlia.NewContact(root_id, "172.16.238.10:8080")
+			rt := kademlia.NewRoutingTable(contact)
 
-		//generate a contact to the rootnode
-		contact_RootNode := kademlia.NewContact(id_Root_Node, "172.16.238.10:8080")
+			kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
+		} else {
+			time.Sleep(1 * time.Second)
+			id_Root_Node := kademlia.NewKademliaID(generateHashForRootNode())
 
-		//generate hash and create contact for our node.
-		id_forOurNode := kademlia.NewKademliaID(generateHashforNode())
-		contact_OurNode := kademlia.NewContact(id_forOurNode, returnIpAddress())
+			//generate a contact to the rootnode
+			contact_RootNode := kademlia.NewContact(id_Root_Node, "172.16.238.10:8080")
 
-		//create a routing table for our node that has the root node and our node
-		rt := kademlia.NewRoutingTable(contact_OurNode)
-		rt.AddContact(contact_RootNode)
+			//generate hash and create contact for our node.
+			id_forOurNode := kademlia.NewKademliaID(generateHashforNode())
+			contact_OurNode := kademlia.NewContact(id_forOurNode, returnIpAddress())
 
-		// test(&contact_RootNode, &contact_OurNode)
+			//create a routing table for our node that has the root node and our node
+			rt := kademlia.NewRoutingTable(contact_OurNode)
+			rt.AddContact(contact_RootNode)
 
-		kademlia.Join("172.16.238.10:8080", rt)
+			// test(&contact_RootNode, &contact_OurNode)
 
-	}
+			kademlia.Join("172.16.238.10:8080", rt)
+
+		}*/
 
 }
 
@@ -170,3 +179,82 @@ func returnIpAddress() string {
 }
 
 func UNUSED(x ...interface{}) {}
+
+func TestRoutingTable() {
+	rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
+
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8001"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111100000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111200000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111300000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111400000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002"))
+
+	//added
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("FA5E1A4DF381D0B650F5F55E8D7155719602E5A2"), "localhost:8001"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("B36828398E513AE808E0C63582FB5DBA635D7D15"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("C0932E562C38612464924C94F9114CFA3359FCAA"), "localhost:8003"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("87DEDEC92E0CEC702F31C8483F7C4B1282817CFB"), "localhost:8004"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1CFA6FA82F344CEF1269A3D746BDD56D640B209C"), "localhost:8005"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("4595501B6DD9270F9319FCC5D80F066BAA7AD885"), "localhost:8006"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("126C842B9C1548B0525DC8EC9FEA17F7813C2CB4"), "localhost:8007"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("78EA7516ED45FF89F9147494F6B3DCCE138407E9"), "localhost:8008"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("0A21410AC1C7E6C30DCF1CE7F66D479586FA7509"), "localhost:8009"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("E54E071691394B677D6A7E061ACA3A8579F05B2C"), "localhost:8010"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1745E1E0EE1EE9BEEFB44C5F75074A71C57E83A8"), "localhost:8011"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("F7537E70EDC525FA87B452F40276137DFE76D5F5"), "localhost:8012"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("7AF1EDF9CFA3EBA5929C2EAE87EB9F2FB9A008BB"), "localhost:8013"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("839C72A968674AC66D6D01F79F3DF7770AF12018"), "localhost:8014"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("6A3F114CF83CCD3E0F2E5F2DFE0C8A242B3D1A7C"), "localhost:8015"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("B8DC1D934B496E9962B150ED579165449241E6DB"), "localhost:8016"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1E7C19EB61FD4A808272FFC07090E266B2F74183"), "localhost:8017"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("78E8D1E2591845F2A6408611EA53304C4C7DA9DB"), "localhost:8018"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("B15483EC1090C84743E27CAD456A037881C79F42"), "localhost:8019"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("F10C7E4A831D9C0083371CC1077A74F4086ACC89"), "localhost:8020"))
+
+	contacts := rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+	for i := range contacts {
+		fmt.Println(contacts[i].String())
+	}
+
+	// TODO: This is just an example. Make more meaningful assertions.
+	if len(contacts) != 6 {
+		fmt.Println("Expected 6 contacts but instead got %d", len(contacts))
+	}
+}
+
+func startup_routingTable(me kademlia.Contact) {
+
+}
+
+func addcontacts(rt *kademlia.RoutingTable) {
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8001"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111100000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111200000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111300000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111400000000000000000000000000000000"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002"))
+
+	//added
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("FA5E1A4DF381D0B650F5F55E8D7155719602E5A2"), "localhost:8001"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("B36828398E513AE808E0C63582FB5DBA635D7D15"), "localhost:8002"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("C0932E562C38612464924C94F9114CFA3359FCAA"), "localhost:8003"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("87DEDEC92E0CEC702F31C8483F7C4B1282817CFB"), "localhost:8004"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1CFA6FA82F344CEF1269A3D746BDD56D640B209C"), "localhost:8005"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("4595501B6DD9270F9319FCC5D80F066BAA7AD885"), "localhost:8006"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("126C842B9C1548B0525DC8EC9FEA17F7813C2CB4"), "localhost:8007"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("78EA7516ED45FF89F9147494F6B3DCCE138407E9"), "localhost:8008"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("0A21410AC1C7E6C30DCF1CE7F66D479586FA7509"), "localhost:8009"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("E54E071691394B677D6A7E061ACA3A8579F05B2C"), "localhost:8010"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1745E1E0EE1EE9BEEFB44C5F75074A71C57E83A8"), "localhost:8011"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("F7537E70EDC525FA87B452F40276137DFE76D5F5"), "localhost:8012"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("7AF1EDF9CFA3EBA5929C2EAE87EB9F2FB9A008BB"), "localhost:8013"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("839C72A968674AC66D6D01F79F3DF7770AF12018"), "localhost:8014"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("6A3F114CF83CCD3E0F2E5F2DFE0C8A242B3D1A7C"), "localhost:8015"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("B8DC1D934B496E9962B150ED579165449241E6DB"), "localhost:8016"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1E7C19EB61FD4A808272FFC07090E266B2F74183"), "localhost:8017"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("78E8D1E2591845F2A6408611EA53304C4C7DA9DB"), "localhost:8018"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("B15483EC1090C84743E27CAD456A037881C79F42"), "localhost:8019"))
+	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("F10C7E4A831D9C0083371CC1077A74F4086ACC89"), "localhost:8020"))
+
+}
