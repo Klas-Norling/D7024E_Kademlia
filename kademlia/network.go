@@ -1,6 +1,8 @@
 package kademlia
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"net"
 	"strconv"
@@ -8,6 +10,152 @@ import (
 )
 
 type Network struct {
+}
+
+func encodeContactsToBytes(contacts []Contact) ([]byte, error) {
+	var buf bytes.Buffer
+	encoder := gob.NewEncoder(&buf)
+	err := encoder.Encode(contacts)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func decodeContactsFromBytes(data []byte) ([]Contact, error) {
+	var contacts []Contact
+	buf := bytes.NewBuffer(data)
+	decoder := gob.NewDecoder(buf)
+	err := decoder.Decode(&contacts)
+	if err != nil {
+		return nil, err
+	}
+	return contacts, nil
+}
+
+func NewListenFunc(ip string, rt *RoutingTable) {
+
+	ip, port := getIpPort(ip)
+
+	ln, err := net.Listen("tcp", ip+":"+strconv.Itoa(port))
+
+	if err != nil {
+		fmt.Println("Caught error: ", err)
+		return
+	}
+
+	defer ln.Close()
+
+	// Accept incoming connections
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			// handle error
+			fmt.Println("Error:", err)
+		}
+		fmt.Println("HELLO")
+		go RPC_handler(conn, rt)
+
+		fmt.Println("Listening on ip and port", ip, port)
+		time.Sleep(3 * time.Second)
+		UNUSED(conn)
+	}
+
+}
+
+func RPC_handler(conn net.Conn, rt *RoutingTable) {
+
+	tmp := make([]byte, 1024)
+	n, err := conn.Read(tmp)
+	root_id := NewKademliaID(generateHashForRootNode())
+	contact := NewContact(root_id, "172.16.238.10:8080")
+	var kadem = Kademlia{}
+	//var network_struct = Network{}
+
+	UNUSED(err)
+
+	receivedString := string(tmp[:n])
+
+	switch receivedString {
+	case "store":
+		// Initialize or reset the store
+
+	case "put":
+		// Put key-value pair in the store
+
+	case "get":
+		// Get value by key
+		address := conn.RemoteAddr().String()
+		id := NewKademliaID(generateHashforNode(address))
+		contact := NewContact(id, address)
+
+		rt.AddContact(contact)
+		//network_struct.SendFindContactMessage(&contact) //Useless???
+		contacts := rt.FindClosestContacts(contact.ID, 20)
+		bytesof_contacts, err := encodeContactsToBytes(contacts)
+		NewSenderFunc(&contact, &rt.me, bytesof_contacts)
+		UNUSED(err)
+
+	case "nodelookup":
+		kadem.LookupContact(&contact)
+
+	case "valuelookup":
+		//kadem.LookupData()
+
+	default:
+		return
+	}
+
+}
+
+func NewSenderFunc(contact_other *Contact, contact_own *Contact, data []byte) {
+	ip, port := getIpPort(contact_own.Address)
+	fmt.Println(ip, port)
+
+	dialer := &net.Dialer{
+		LocalAddr: &net.TCPAddr{
+			IP:   net.ParseIP(ip),
+			Port: port,
+		},
+	}
+
+	conn, err := dialer.Dial("tcp", contact_other.Address)
+	if err != nil {
+		fmt.Println("Error caught: ", err)
+		defer conn.Close()
+	}
+
+	fmt.Println("Connection was established to: ", conn.RemoteAddr())
+
+	conn.Write(data)
+}
+
+func NewSenderFunc_Nodelookup(contact_other *Contact, contact_own *Contact, data []byte) {
+	ip, port := getIpPort(contact_own.Address)
+	fmt.Println(ip, port)
+
+	dialer := &net.Dialer{
+		LocalAddr: &net.TCPAddr{
+			IP:   net.ParseIP(ip),
+			Port: port,
+		},
+	}
+
+	conn, err := dialer.Dial("tcp", contact_other.Address)
+	if err != nil {
+		fmt.Println("Error caught: ", err)
+		defer conn.Close()
+	}
+
+	fmt.Println("Connection was established to: ", conn.RemoteAddr())
+
+	conn.Write([]byte("join"))
+	tmp := make([]byte, 1024)
+	time.Sleep(3 * time.Second)
+	n, err := conn.Read(tmp)
+	fmt.Println(n)
+	receivedString := string(tmp[:n])
+	fmt.Println(receivedString)
 }
 
 func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
@@ -24,15 +172,17 @@ func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 
 	for {
 		// Accept incoming connections
+		fmt.Println("HELLO NUMBER 1")
 		conn, err := ln.Accept()
+		fmt.Println("HELLO NUMBER 2")
 		if err != nil {
 			// handle error
 			fmt.Println("Error:", err)
 			continue
 		}
 		// Handle client connection in a goroutine
-
-		go handleConnection(conn, numberofreplicas, rt)
+		//handleConnection(conn, numberofreplicas, rt)
+		go RPC_handler(conn, rt)
 	}
 
 }
@@ -113,6 +263,7 @@ func getIpPort(address string) (ip string, port int) {
 
 func Join(dst_address string, rt *RoutingTable) {
 	address := returnIpAddress()
+
 	ip, port := getIpPort(address)
 	fmt.Println("address: ", address, " Port: ", port)
 
@@ -161,6 +312,7 @@ func Join(dst_address string, rt *RoutingTable) {
 
 }
 
+// this is our FindNode()
 func (network *Network) SendFindContactMessage(contact *Contact) {
 	// TODO
 }

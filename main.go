@@ -20,15 +20,44 @@ func main() {
 	//generate hash for root node
 
 	fmt.Println("Pretending to run the kademlia app...")
-	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000")
-	rt := kademlia.NewRoutingTable(me)
-	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("eb70d2b212be125aaa890c4082f44084d5a00180"), "172.16.238.10:8001"))
-	addcontacts(rt)
+	//generate hash and create contact for our node.
+	/*	id_forOurNode := kademlia.NewKademliaID(generateHashforNode())
+		contact_OurNode := kademlia.NewContact(id_forOurNode, returnIpAddress())
 
-	go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
-	go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
-	go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+		//create a routing table for our node that has the root node and our node
+		rt := kademlia.NewRoutingTable(contact_OurNode)
 
+		address := returnIpAddress()
+
+		go kademlia.NewListenFunc()*/
+	if returnIpAddress() == "172.16.238.10:8090" {
+		root_id := kademlia.NewKademliaID(generateHashForRootNode())
+		contact := kademlia.NewContact(root_id, "172.16.238.10:8080")
+		rt := kademlia.NewRoutingTable(contact)
+		numberofreplicas := 0
+		kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
+	}
+
+	//TestRoutingTable()
+	/*
+		me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000")
+		rt := kademlia.NewRoutingTable(me)
+		rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("eb70d2b212be125aaa890c4082f44084d5a00180"), "172.16.238.10:8001"))
+		addcontacts(rt)*/
+
+	//go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+	//go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+	//go rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+	/*
+		In main, create all the contacts in the system at the beginning of the run,
+		later when a new node joins, make it so that all other nodes get updated.
+	*/
+
+	/*
+		Varje nod ska kontakta rootnoden genom nodelookup, rootnoden ska sedan skicka till dem tillbakavad dem fick från nodelookup.
+
+		Network ska fungera att alla noder är i standby för att lyssna på sina porter och kommer då få ett komandosom de ska köra
+	*/
 	/*
 		if returnIpAddress() == "172.16.238.10:8090" {
 			// save contacts/create contacts
@@ -39,6 +68,14 @@ func main() {
 			root_id := kademlia.NewKademliaID(generateHashForRootNode())
 			contact := kademlia.NewContact(root_id, "172.16.238.10:8080")
 			rt := kademlia.NewRoutingTable(contact)
+
+			//these contacts should be static
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8001"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111100000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111200000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111300000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111400000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002"))
 
 			kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
 		} else {
@@ -56,11 +93,20 @@ func main() {
 			rt := kademlia.NewRoutingTable(contact_OurNode)
 			rt.AddContact(contact_RootNode)
 
+			//these contacts should be static
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8001"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111100000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111200000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111300000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("1111111400000000000000000000000000000000"), "localhost:8002"))
+			rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002"))
+
 			// test(&contact_RootNode, &contact_OurNode)
 
 			kademlia.Join("172.16.238.10:8080", rt)
 
-		}*/
+		}
+	*/
 
 }
 
@@ -212,6 +258,7 @@ func TestRoutingTable() {
 	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("B15483EC1090C84743E27CAD456A037881C79F42"), "localhost:8019"))
 	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("F10C7E4A831D9C0083371CC1077A74F4086ACC89"), "localhost:8020"))
 
+	fmt.Println("hello")
 	contacts := rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
 	for i := range contacts {
 		fmt.Println(contacts[i].String())
