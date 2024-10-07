@@ -38,28 +38,30 @@ func NewListenFunc(ip string, rt *RoutingTable) {
 	ip, port := getIpPort(ip)
 
 	ln, err := net.Listen("tcp", ip+":"+strconv.Itoa(port))
-
+	fmt.Println("HELOOOOOOOOOOO1")
 	if err != nil {
 		fmt.Println("Caught error: ", err)
 		return
 	}
 
-	defer ln.Close()
-
 	// Accept incoming connections
+	fmt.Println("HELOOOOOOOOOOO")
 	for {
+		fmt.Println("HELLO1")
 		conn, err := ln.Accept()
 		if err != nil {
 			// handle error
 			fmt.Println("Error:", err)
 		}
-		fmt.Println("HELLO")
+		fmt.Println("HELLO2")
+		//go RPC_handler(conn, rt)
 		go RPC_handler(conn, rt)
 
-		fmt.Println("Listening on ip and port", ip, port)
+		fmt.Println("Listen Listening on ip and port", ip, port)
 		time.Sleep(3 * time.Second)
 		UNUSED(conn)
 	}
+	defer ln.Close()
 
 }
 
@@ -75,6 +77,7 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	UNUSED(err)
 
 	receivedString := string(tmp[:n])
+	fmt.Println(receivedString)
 
 	switch receivedString {
 	case "store":
@@ -83,8 +86,10 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	case "put":
 		// Put key-value pair in the store
 
-	case "get":
+	case "find_node":
 		// Get value by key
+		fmt.Println("You got inside: ", conn.RemoteAddr().String())
+
 		address := conn.RemoteAddr().String()
 		id := NewKademliaID(generateHashforNode(address))
 		contact := NewContact(id, address)
@@ -93,7 +98,8 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 		//network_struct.SendFindContactMessage(&contact) //Useless???
 		contacts := rt.FindClosestContacts(contact.ID, 20)
 		bytesof_contacts, err := encodeContactsToBytes(contacts)
-		NewSenderFunc(&contact, &rt.me, bytesof_contacts)
+		fmt.Println("HELLO!23")
+		NewSenderFunc(conn, &contact, &rt.me, bytesof_contacts)
 		UNUSED(err)
 
 	case "nodelookup":
@@ -108,9 +114,17 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 
 }
 
-func NewSenderFunc(contact_other *Contact, contact_own *Contact, data []byte) {
-	ip, port := getIpPort(contact_own.Address)
-	fmt.Println(ip, port)
+func NewSenderFunc(conn net.Conn, contact_other *Contact, contact_own *Contact, data []byte) {
+	fmt.Println("Connection was established to: ", conn.RemoteAddr())
+
+	conn.Write(data)
+}
+
+func InitiateSender(dst_address string, data []byte) {
+	address := returnIpAddress()
+
+	ip, port := getNewIpPort(address)
+	fmt.Println("in initiate sender address: ", address, " Port: ", port)
 
 	dialer := &net.Dialer{
 		LocalAddr: &net.TCPAddr{
@@ -119,15 +133,28 @@ func NewSenderFunc(contact_other *Contact, contact_own *Contact, data []byte) {
 		},
 	}
 
-	conn, err := dialer.Dial("tcp", contact_other.Address)
+	conn, err := dialer.Dial("tcp", dst_address)
+
 	if err != nil {
 		fmt.Println("Error caught: ", err)
 		defer conn.Close()
+
+	} else {
+		conn.Write(data)
+		tmp := make([]byte, 1024)
+		time.Sleep(3 * time.Second)
+		n, err := conn.Read(tmp)
+		//new, error :=
+
+		receivedString := string(tmp[:n])
+		recstring := []byte(receivedString)
+		new_recstring, errors := decodeContactsFromBytes(recstring)
+		fmt.Println("Received from connection:", new_recstring)
+		UNUSED(err)
+		defer conn.Close()
+		UNUSED(errors)
 	}
 
-	fmt.Println("Connection was established to: ", conn.RemoteAddr())
-
-	conn.Write(data)
 }
 
 func NewSenderFunc_Nodelookup(contact_other *Contact, contact_own *Contact, data []byte) {
@@ -182,7 +209,7 @@ func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 		}
 		// Handle client connection in a goroutine
 		//handleConnection(conn, numberofreplicas, rt)
-		go RPC_handler(conn, rt)
+		RPC_handler(conn, rt)
 	}
 
 }
@@ -259,6 +286,15 @@ func getIpPort(address string) (ip string, port int) {
 	ip_address := address[:len(address)-5]
 	fmt.Println("port number: ", port_number, "ip_address: ", ip_address)
 	return ip_address, port_number
+}
+
+func getNewIpPort(address string) (ip string, port int) {
+	port_number, err := strconv.Atoi(address[len(address)-4:])
+	new_port_number := port_number + 1
+	UNUSED(err)
+	ip_address := address[:len(address)-5]
+	fmt.Println("port number: ", new_port_number, "ip_address: ", ip_address)
+	return ip_address, new_port_number
 }
 
 func Join(dst_address string, rt *RoutingTable) {
