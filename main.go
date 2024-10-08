@@ -14,4 +14,5 @@ func main() {
 	contact := kademlia.NewContact(id, "localhost:8000")
 	fmt.Println(contact.String())
 	fmt.Printf("%v\n", contact)
+
 }
