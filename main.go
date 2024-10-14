@@ -5,6 +5,7 @@ package main
 import (
 	"d7024e/kademlia"
 	"fmt"
+	"time"
 )
 
 func main() {
@@ -14,5 +15,6 @@ func main() {
 	contact := kademlia.NewContact(id, "localhost:8000")
 	fmt.Println(contact.String())
 	fmt.Printf("%v\n", contact)
-	kademlia.Cli()
+	go kademlia.Cli()
+	time.Sleep(20 * time.Second)
 }
