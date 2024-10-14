@@ -16,6 +16,7 @@ func generateHashforNode(ipaddress string) string {
 	//hash our ip address
 	hashed_addrs := sha1.New()
 	hashed_addrs.Write([]byte(string(address)))
+	fmt.Println(address, "---------------------------------------")
 	sha1_addrs := hex.EncodeToString(hashed_addrs.Sum(nil))
 
 	return sha1_addrs
