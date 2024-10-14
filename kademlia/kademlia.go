@@ -37,14 +37,13 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 // Takes a 160 bit key, if the corresponding value is present on the recipient,
 // the associated data is returned
 func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
-	// TODO
 	value, exists := kademlia.data[hash]
 
 	if exists {
 		fmt.Println("Value already exists: ", value)
 
 	} else {
-		fmt.Println("Value does not exists, searching for value in k closest nodes")
+		fmt.Println("Value does not exists, searching for value in k closest contacts")
 
 		var closest_contacts []Contact
 		k := 3
