@@ -259,15 +259,15 @@ func nodelookup_func(dst_address string, target_address string, rt *kademlia.Rou
 				}
 
 				ipaddr := closest_contacts[i].Address
-				if i+1 >= length_of_array {
+				if k >= length_of_array {
 					break
 				}
 
-				ipaddr2 := closest_contacts[i+k].Address
-				if i+2 >= length_of_array {
+				ipaddr2 := closest_contacts[k].Address
+				if j >= length_of_array {
 					break
 				}
-				ipaddr3 := closest_contacts[i+2].Address
+				ipaddr3 := closest_contacts[j].Address
 
 				go kademlia.InitiateSender(ipaddr, []byte(sendingString), rt, c)
 				go kademlia.InitiateSender(ipaddr2, []byte(sendingString), rt, c)
