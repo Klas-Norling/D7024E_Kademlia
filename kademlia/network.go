@@ -19,6 +19,6 @@ func (network *Network) SendFindDataMessage(hash string) {
 	// TODO
 }
 
-func (network *Network) SendStoreMessage(data []byte) {
+func (network *Network) SendStoreMessage(data []byte, contact Contact) {
 	// TODO
 }
