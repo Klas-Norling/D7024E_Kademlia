@@ -51,6 +51,11 @@ func (candidates *ContactCandidates) GetContacts(count int) []Contact {
 	return candidates.contacts[:count]
 }
 
+// GetContacts returns the first count number of Contacts
+func (candidates *ContactCandidates) NormalGetContacts() []Contact {
+	return candidates.contacts
+}
+
 // Sort the Contacts in ContactCandidates
 func (candidates *ContactCandidates) Sort() {
 	sort.Sort(candidates)

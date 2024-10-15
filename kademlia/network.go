@@ -151,9 +151,9 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 		rt.AddContact(contact_forsender)
 
 		newip, newport := getIpPort(ipaddr)
-		fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
+		//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
 		address := newip + ":" + strconv.Itoa(newport)
-		fmt.Println("Hello1234: ", address)
+		//fmt.Println("Hello1234: ", address)
 
 		id := NewKademliaID(generateHashforNode(address))
 		contact := NewContact(id, address)
@@ -261,7 +261,7 @@ func InitiateSender(dst_address string, data []byte, rt *RoutingTable, c chan []
 		//contact.CalcDistance(dst_contact.ID)
 		//}
 
-		fmt.Println("Recieved string", new_recstring)
+		//fmt.Println("Recieved string", new_recstring)
 		//for i := range new_recstring {
 		//rt.AddContact(new_recstring[i])
 		//}
@@ -274,12 +274,13 @@ func InitiateSender(dst_address string, data []byte, rt *RoutingTable, c chan []
 		//UNUSED(errors)
 		//UNUSED(n)
 		return_contacts = new_recstring
-		fmt.Println("HELLO123422221", new_recstring)
-		fmt.Println("HELLO12342222", return_contacts)
+		//fmt.Println("HELLO123422221", new_recstring)
+		//fmt.Println("HELLO12342222", return_contacts)
 
 	}
-	fmt.Println("HELLO12342222", return_contacts)
+	fmt.Println("HELLO", return_contacts)
 	//return return_contacts
+	fmt.Println("HELLO???")
 	c <- return_contacts
 
 }

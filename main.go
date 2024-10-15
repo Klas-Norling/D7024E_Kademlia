@@ -39,11 +39,18 @@ func main() {
 		go kademlia.NewListenFunc("172.16.238.10:8080", rt)
 
 	} else {
-		node_id := kademlia.NewKademliaID(generateHashforNode())
+
+		root_node_id := kademlia.NewKademliaID(generateHashForRootNode())
+		root_ipaddress := "172.16.238.10:8080"
+		root_contact := kademlia.NewContact(root_node_id, root_ipaddress)
+
+		node_id := kademlia.NewKademliaID(GenerateHashforNode())
 		ipaddress := returnIpAddress()
+
 		//ip, port := getIpPort(ipaddress)
 		contact := kademlia.NewContact(node_id, ipaddress)
 		rt := kademlia.NewRoutingTable(contact)
+		rt.AddContact(root_contact)
 
 		go kademlia.NewListenFunc(ipaddress, rt)
 
@@ -55,6 +62,10 @@ func main() {
 		for i := range contacts {
 			fmt.Println("BEFORE:------------------", contacts[i].String())
 		}
+
+		nodelookup_func("172.16.238.10:8080", "172.16.238.3:8083", rt)
+		//node
+
 		//returned_contacts := kademlia.InitiateSender("172.16.238.10:8080", sendingstring, rt)
 		UNUSED(rt)
 		contacts = rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
@@ -95,7 +106,7 @@ func generateHashForRootNode() string {
 
 }
 
-func generateHashforNode() string {
+func GenerateHashforNode() string {
 
 	address := returnIpAddress()
 
@@ -228,8 +239,9 @@ func addcontacts(rt *kademlia.RoutingTable) {
 */
 
 func nodelookup_func(dst_address string, target_address string, rt *kademlia.RoutingTable) []kademlia.Contact {
-	mocking_rt := *rt
-	closest_contacts := mocking_rt.FindClosestContacts(kademlia.NewKademliaID(generateHashforTargetNode(target_address)), 3)
+	target := kademlia.NewContact(kademlia.NewKademliaID(generateHashforTargetNode(target_address)), target_address)
+
+	closest_contacts := rt.FindClosestContacts(target.ID, 3)
 
 	var shortlist = kademlia.ContactCandidates{}
 	shortlist.Append(closest_contacts)
@@ -241,51 +253,103 @@ func nodelookup_func(dst_address string, target_address string, rt *kademlia.Rou
 
 	var contacted_nodes_array []kademlia.Contact
 
-	sendingString := ""
-	if len(shortlist.GetContacts(20)) == 0 {
-		closest_contacts = append(closest_contacts, kademlia.NewContact(kademlia.NewKademliaID(generateHashforNode()), returnIpAddress()))
-	} else {
-		c := make(chan []kademlia.Contact, 3)
-		length_of_array := len(closest_contacts)
-		k := 1
-		j := 2
-		for i := range closest_contacts {
+	sendingString := "find_node;"
 
-			if check_if_node_exists(contacted_nodes_array, closest_contacts[i]) == true {
-				fmt.Println("Already contacted")
-			} else {
-				if i >= length_of_array {
-					break
-				}
-
+	c1 := make(chan []kademlia.Contact)
+	c2 := make(chan []kademlia.Contact)
+	c3 := make(chan []kademlia.Contact)
+	length_of_array := len(closest_contacts)
+	k := 1
+	j := 2
+	fmt.Println("HELLO IN NODELOOKUp12345")
+	number_of_threads_okayed := 0
+	for i := range closest_contacts {
+		fmt.Println("HELLO IN NODELOOKUp2")
+		fmt.Println("closest_contacts", closest_contacts, ", number i: ", i, " length of array:", length_of_array)
+		fmt.Println("closest_contacts", closest_contacts)
+		if check_if_node_exists(contacted_nodes_array, closest_contacts[i]) == true {
+			fmt.Println("Already contacted")
+			fmt.Println("HELLO IN NODELOOKUp3")
+		} else {
+			fmt.Println("HELLO IN NODELOOKUp4")
+			if i < length_of_array {
+				//break
+				fmt.Println("HELLO IN NODELOOKUp5")
 				ipaddr := closest_contacts[i].Address
-				if k >= length_of_array {
-					break
-				}
-
-				ipaddr2 := closest_contacts[k].Address
-				if j >= length_of_array {
-					break
-				}
-				ipaddr3 := closest_contacts[j].Address
-
-				go kademlia.InitiateSender(ipaddr, []byte(sendingString), rt, c)
-				go kademlia.InitiateSender(ipaddr2, []byte(sendingString), rt, c)
-				go kademlia.InitiateSender(ipaddr3, []byte(sendingString), rt, c)
-				contacted_nodes_array = append(contacted_nodes_array, closest_contacts[i])
-
-				x, y, z := <-c, <-c, <-c
-
-				shortlist.Append(x)
-				shortlist.Append(y)
-				shortlist.Append(z)
-				shortlist.Sort()
-				i += 3
-				k += 3
-				j += 3
+				sendingString = "find_node;" + ipaddr
+				go kademlia.InitiateSender(ipaddr, []byte(sendingString), rt, c1)
 
 			}
 
+			if k < length_of_array {
+				//break
+				fmt.Println("HELLO IN NODELOOKUp6")
+				ipaddr2 := closest_contacts[k].Address
+				sendingString = "find_node;" + ipaddr2
+				go kademlia.InitiateSender(ipaddr2, []byte(sendingString), rt, c2)
+
+			}
+
+			if j < length_of_array {
+				//break
+				fmt.Println("HELLO IN NODELOOKUp7")
+				ipaddr3 := closest_contacts[j].Address
+				sendingString = "find_node;" + ipaddr3
+				go kademlia.InitiateSender(ipaddr3, []byte(sendingString), rt, c3)
+				number_of_threads_okayed += 1
+			}
+
+			//Initiatesender(destination_address, command_and_targetNode, routing_table, channel)
+
+			contacted_nodes_array = append(contacted_nodes_array, closest_contacts[i])
+			fmt.Println("nodelookup threads122222")
+			//x, y, z := <-c, <-c, <-c
+			x := <-c1
+			fmt.Println("x---:", x)
+			fmt.Println("helelelelel:")
+			var y, z []kademlia.Contact
+			fmt.Println("number_of_threads_okayed: ", number_of_threads_okayed)
+			if k < length_of_array {
+				y := <-c2
+				fmt.Println("y---:", y)
+				fmt.Println("HELLOOOOOO!!234")
+			}
+
+			fmt.Println("helelelelel:")
+			if j < length_of_array {
+				z := <-c3
+				fmt.Println("y---:", z)
+				fmt.Println("HELLOOOOOO!!1234")
+			}
+			fmt.Println("helelelelel:")
+
+			fmt.Println("z---:", z)
+			fmt.Println("nodelookup threads222222")
+			fmt.Println("x---:", x, "y---:", y, "z---:", z)
+			fmt.Println("IS IT FTER THIS?")
+
+			shortlist.Append(x)
+			if k < length_of_array {
+				fmt.Println("HELLOOOOOO!!2348")
+				shortlist.Append(y)
+
+			}
+
+			if j < length_of_array {
+				fmt.Println("HELLOOOOOO!!2349")
+				shortlist.Append(z)
+			}
+
+			fmt.Println("helelelel")
+
+			////added
+			//	rt.AddContact(kademlia.NewContact(kademlia.NewKademliaID("FA5E1A4DF381D0B650F5F55E8D7155719602E5A2"), "localhost:8001"))
+			shortlist = sort_shortlist(shortlist, target)
+			fmt.Println("HELLOOOOOOOOOOO")
+			i += 3
+			k += 3
+			j += 3
+			fmt.Println("helelelel123")
 		}
 
 	}
@@ -293,10 +357,31 @@ func nodelookup_func(dst_address string, target_address string, rt *kademlia.Rou
 	return closest_contacts
 }
 
+func sort_shortlist(shortlist kademlia.ContactCandidates, target kademlia.Contact) kademlia.ContactCandidates {
+	/*rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
+	closest_candidates := shortlist.NormalGetContacts()
+	for i := range closest_candidates {
+		rt.AddContact(closest_candidates[i])
+	}
+	shortlist.rt.FindClosestContacts(target.ID, 20)*/
+	fmt.Println("HELELELELEL")
+	closest_candidates := shortlist.NormalGetContacts()
+	fmt.Println("HELELELELEL")
+
+	for i := range closest_candidates {
+		fmt.Println("closest_candidates: ", closest_candidates)
+		fmt.Println("closest.candidates[i]", closest_candidates[i])
+		closest_candidates[i].CalcDistance(target.ID)
+	}
+	fmt.Println("Shortlist: ", shortlist)
+	shortlist.Sort()
+	return shortlist
+}
+
 func check_if_node_exists(contacts []kademlia.Contact, target kademlia.Contact) bool {
 	for _, contact := range contacts {
 		if contact == target {
-			return true // Contact exists
+
 		}
 	}
 	return false
