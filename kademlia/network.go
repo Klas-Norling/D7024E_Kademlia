@@ -138,9 +138,6 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 		rt.AddContact(contact)
 		kademlia.Store([]byte(ipaddr))
 
-	case "put":
-		// Put key-value pair in the store
-
 	case "find_node":
 		// Get value by key
 		fmt.Println("You got inside: ", conn.RemoteAddr().String())
@@ -178,9 +175,6 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 		fmt.Println("ALL THE CONTACTS: ", contacts)
 		NewSenderFunc(conn, &contact, &rt.me, contacts)
 		UNUSED(err)
-
-	case "nodelookup":
-		//kadem.LookupContact(&contact)
 
 	case "find_value":
 		kademlia := InitializeNode()

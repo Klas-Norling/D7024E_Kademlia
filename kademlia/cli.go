@@ -7,16 +7,17 @@ import (
 	"strings"
 )
 
-func Cli(rt *RoutingTable) {
+func Cli(kademlia *Kademlia) {
 
 	fmt.Println("Enter commands")
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
 	text = strings.TrimSpace(text)
-	inputHandler(text, rt)
+	//time.Sleep(time.Second * 10)
+	InputHandler(text, kademlia)
 }
 
-func inputHandler(input string, rt *RoutingTable) {
+func InputHandler(input string, kademlia *Kademlia) {
 	fmt.Println("Input:" + input)
 
 	split := strings.SplitN(input, " ", 2)
@@ -24,8 +25,6 @@ func inputHandler(input string, rt *RoutingTable) {
 	content := split[1]
 
 	var network = Network{}
-	var kademlia = Kademlia{}
-
 	switch command {
 
 	case "put":
@@ -34,20 +33,22 @@ func inputHandler(input string, rt *RoutingTable) {
 
 		kademlia.Store([]byte(content))
 
+		fmt.Println("After store command")
 		// hash := kad.Store([]byte(content))
 		// fmt.Println(hash)
 
-		contacts := rt.FindClosestContacts(rt.me.ID, 3)
+		contacts := kademlia.rt.FindClosestContacts(kademlia.rt.me.ID, 3)
 
 		for i := 0; i < len(contacts); i++ {
 			network.SendStoreMessage(content, contacts[i])
 		}
 
 	case "get":
-		fmt.Println("Putter")
+		fmt.Println("Getter")
 		fmt.Println("Content: ", content)
 
-		kademlia.LookupData(content)
+		//kademlia.LookupData(content)
+		kademlia.LookupData("a1b9bdfcb1f469376df7431bbb2a375fb3fb413a")
 
 		// value := kad.LookupData(content)
 		// fmt.Println(value)

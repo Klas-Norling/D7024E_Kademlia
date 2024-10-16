@@ -30,13 +30,17 @@ func InitializeNode() Kademlia {
 
 }
 
+func (kademlia *Kademlia) GetRoutingtable() RoutingTable {
+	return kademlia.rt
+}
+
 func (kademlia *Kademlia) LookupContact(target *Contact) {
 	contacts := kademlia.rt.FindClosestContacts(target.ID, 3)
 
 	var shortlist = ContactCandidates{}
 	var contacted_nodes []Contact
 
-	channel := make(chan []Contact, 3)
+	// channel := make(chan []Contact, 3)
 
 	if len(contacts) == 0 {
 		fmt.Println("No contacts in the routingtable")
@@ -84,7 +88,7 @@ func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 	value, exists := kademlia.data[hash]
 
 	if exists {
-		fmt.Println("Value already exists: ", value)
+		fmt.Println("Value already exists: ", string(value))
 
 	} else {
 		fmt.Println("Value does not exists, searching for value in k closest contacts")
@@ -116,7 +120,7 @@ func (kademlia *Kademlia) Store(data []byte) {
 	hash := sha1.New()
 	hash.Write(data)
 	sha1_data := hex.EncodeToString(hash.Sum(nil))
-
+	fmt.Println("In store, data= ", sha1_data)
 	kademlia.data[sha1_data] = data
 
 }

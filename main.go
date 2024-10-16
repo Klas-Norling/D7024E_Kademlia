@@ -10,8 +10,12 @@ import (
 func main() {
 	fmt.Println("Pretending to run the kademlia app...")
 	// Using stuff from the kademlia package here. Something like...
-	id := kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000")
-	contact := kademlia.NewContact(id, "localhost:8000")
-	fmt.Println(contact.String())
-	fmt.Printf("%v\n", contact)
+	// node := kademlia.InitializeNode()
+	fmt.Println("Hello")
+	kademlia.NewKademliaID("1234567890abcdef1234567890abcdef12345678")
+
+	// kademlia.Cli(&node)
+	// kademlia.Test_put("put klasnorling", &node)
+	// kademlia.Test_get("klasnorling", &node)
+	// kademlia.Test_exit("exit k", &node)
 }
