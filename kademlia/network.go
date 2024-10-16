@@ -121,9 +121,6 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	receivedString := string(tmp[:n])
 	fmt.Println(receivedString)
 
-	hello := "find_node;ipaddress"
-	b1, b2 := MakeSenseOfStringMessage(hello)
-	fmt.Println("b1:", b1, "b2:", b2)
 	command, ipaddr := MakeSenseOfStringMessage(receivedString)
 	fmt.Println(command + ipaddr)
 
@@ -140,55 +137,87 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 
 	case "find_node":
 		// Get value by key
-		fmt.Println("You got inside: ", conn.RemoteAddr().String())
-		fmt.Println("Remoteaddr: ", conn.RemoteAddr().String())
-		fmt.Println("recieved string: ", receivedString)
-		fmt.Println("Hello1234forsender: ", ipaddr)
+
 		newip_forsender, newport_forsender := getdecrementIpPort(conn.RemoteAddr().String())
-		fmt.Println("Hello1234forsender: ", newip_forsender+":"+strconv.Itoa(newport_forsender))
-		address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
-		fmt.Println("Hello1234forsender: ", address_forsender)
+		contacts, contact := switch_case_find_node(newip_forsender, ipaddr, newport_forsender, rt)
+		/*
+			address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
 
-		//we generate a kademliaID for the sender
-		id_forsender := NewKademliaID(generateHashforNode(address_forsender))
-		contact_forsender := NewContact(id_forsender, address_forsender)
-		rt.AddContact(contact_forsender)
+			//we generate a kademliaID for the sender
+			id_forsender := NewKademliaID(generateHashforNode(address_forsender))
+			contact_forsender := NewContact(id_forsender, address_forsender)
+			rt.AddContact(contact_forsender)
 
-		newip, newport := getIpPort(ipaddr)
-		//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
-		address := newip + ":" + strconv.Itoa(newport)
-		//fmt.Println("Hello1234: ", address)
+			newip, newport := getIpPort(ipaddr)
+			//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
+			address := newip + ":" + strconv.Itoa(newport)
+			//fmt.Println("Hello1234: ", address)
 
-		id := NewKademliaID(generateHashforNode(address))
-		contact := NewContact(id, address)
-		rt.AddContact(contact)
+			id := NewKademliaID(generateHashforNode(address))
+			contact := NewContact(id, address)
+			rt.AddContact(contact)
 
-		//network_struct.SendFindContactMessage(&contact) //Useless???
-		//fmt.Println("HHHHHHHHHHHHHHHHHHHHH", contact.ID)
-		contacts := rt.FindClosestContacts(contact.ID, 20)
+			//network_struct.SendFindContactMessage(&contact) //Useless???
+			//fmt.Println("HHHHHHHHHHHHHHHHHHHHH", contact.ID)
+			contacts := rt.FindClosestContacts(contact.ID, 20)*/
 		//fmt.Println("HELELELLE", contacts[0].distance)
 		//fmt.Println("HELELELLE", *contacts[0].distance)
 		//fmt.Println(contacts)
 		//bytesof_contacts, err := encodeContactsToBytes(contacts)
 		//fmt.Println("HELLO!23")
 		//NewSenderFunc(conn, &contact, &rt.me, bytesof_contacts)
-		fmt.Println("ALL THE CONTACTS: ", contacts)
+
 		NewSenderFunc(conn, &contact, &rt.me, contacts)
 		UNUSED(err)
 
 	case "find_value":
-		kademlia := InitializeNode()
+
 		address := conn.RemoteAddr().String()
-		id := NewKademliaID(address)
-		contact := NewContact(id, address)
-		rt.AddContact(contact)
-		data := EncodeToBytes(kademlia.LookupData(ipaddr))
+		data := switch_case_find_value(address, ipaddr, rt)
+		/*
+			kademlia := InitializeNode()
+			id := NewKademliaID(address)
+			contact := NewContact(id, address)
+			rt.AddContact(contact)
+			data := EncodeToBytes(kademlia.LookupData(ipaddr))*/
 		conn.Write(data)
 		defer conn.Close()
 
 	default:
 		return
 	}
+
+}
+
+func switch_case_find_node(newip_forsender string, ipaddr string, newport_forsender int, rt *RoutingTable) ([]Contact, Contact) {
+	address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
+
+	//we generate a kademliaID for the sender
+	id_forsender := NewKademliaID(generateHashforNode(address_forsender))
+	contact_forsender := NewContact(id_forsender, address_forsender)
+	rt.AddContact(contact_forsender)
+
+	newip, newport := getIpPort(ipaddr)
+	//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
+	address := newip + ":" + strconv.Itoa(newport)
+	//fmt.Println("Hello1234: ", address)
+
+	id := NewKademliaID(generateHashforNode(address))
+	contact := NewContact(id, address)
+	rt.AddContact(contact)
+	contacts := rt.FindClosestContacts(contact.ID, 20)
+	fmt.Println("HELELELLELELELELELLELYEAH")
+	return contacts, contact
+}
+
+func switch_case_find_value(address string, ipaddr string, rt *RoutingTable) []byte {
+	kademlia := InitializeNode()
+	//id := NewKademliaID(address)
+	id := NewKademliaID(generateHashforNode(address))
+	contact := NewContact(id, address)
+	rt.AddContact(contact)
+	data := EncodeToBytes(kademlia.LookupData(ipaddr))
+	return data
 
 }
 
@@ -253,6 +282,7 @@ func InitiateSender(dst_address string, data []byte, rt *RoutingTable, c chan []
 
 }
 
+/*
 func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 	ln, err := net.Listen("tcp", ip+":"+strconv.Itoa(port))
 
@@ -280,8 +310,8 @@ func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 		RPC_handler(conn, rt)
 	}
 
-}
-
+}*/
+/*
 func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 	// handle incoming messages here
 	fmt.Println("Connection accepted from", conn.RemoteAddr().String())
@@ -325,7 +355,7 @@ func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 
 	//return conn
 	defer conn.Close()
-}
+}*/
 
 func SendPingMessage(contact_root *Contact, contact_own *Contact) {
 
@@ -374,6 +404,7 @@ func getNewIpPort(address string) (ip string, port int) {
 	return ip_address, new_port_number
 }
 
+/*
 func Join(dst_address string, rt *RoutingTable) {
 	address := returnIpAddress()
 
@@ -424,7 +455,7 @@ func Join(dst_address string, rt *RoutingTable) {
 	}
 
 }
-
+*/
 // this is our FindNode()
 func (network *Network) SendFindContactMessage(contact Contact) {
 	address := returnIpAddress()
