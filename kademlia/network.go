@@ -121,7 +121,7 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	receivedString := string(tmp[:n])
 	fmt.Println(receivedString)
 
-	hello := "find_node;ipaddress"
+	hello := "cli;put auudau"
 	b1, b2 := MakeSenseOfStringMessage(hello)
 	fmt.Println("b1:", b1, "b2:", b2)
 	command, ipaddr := MakeSenseOfStringMessage(receivedString)
@@ -133,6 +133,8 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 
 	case "put":
 		// Put key-value pair in the store
+
+	case "cli":
 
 	case "find_node":
 		// Get value by key
