@@ -97,7 +97,7 @@ func NewListenFunc(ip string, rt *RoutingTable) {
 		}
 		//	fmt.Println("HELLO2")
 		//go RPC_handler(conn, rt)
-		go RPC_handler(conn, rt)
+		RPC_handler(conn, rt)
 
 		fmt.Println("Listen Listening on ip and port", ip, port)
 		//	time.Sleep(3 * time.Second)
@@ -120,7 +120,7 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 
 	receivedString := string(tmp[:n])
 	fmt.Println(receivedString)
-
+	defer conn.Close()
 	command, ipaddr := MakeSenseOfStringMessage(receivedString)
 	fmt.Println(command + ipaddr)
 	fmt.Println("command:", command, "other", ipaddr)
@@ -186,7 +186,6 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 			rt.AddContact(contact)
 			data := EncodeToBytes(kademlia.LookupData(ipaddr))*/
 		conn.Write(data)
-		defer conn.Close()
 
 	default:
 		fmt.Println("RPC HANDLER DEFAULT")
@@ -265,10 +264,11 @@ func InitiateSender(dst_address string, data []byte, rt *RoutingTable, c chan []
 	conn, err := dialer.Dial("tcp", dst_address)
 	fmt.Println("hello")
 	if err != nil {
-		fmt.Println("Error caught: ", err)
+		fmt.Println("Error caught---: ", err)
 		defer conn.Close()
 
 	} else {
+		fmt.Println(dst_address)
 		conn.Write(data)
 		tmp := make([]byte, 2048)
 		fmt.Println("hello1")
@@ -317,6 +317,7 @@ func InitiateSenderForPong(dst_address string, data []byte, rt *RoutingTable, c 
 		defer conn.Close()
 
 	} else {
+		fmt.Println(dst_address)
 		conn.Write(data)
 		tmp := make([]byte, 2048)
 		fmt.Println("hello1")

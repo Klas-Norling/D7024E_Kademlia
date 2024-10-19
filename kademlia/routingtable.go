@@ -9,6 +9,8 @@ type RoutingTable struct {
 	buckets [IDLength * 8]*bucket
 }
 
+
+
 // NewRoutingTable returns a new instance of a RoutingTable
 func NewRoutingTable(me Contact) *RoutingTable {
 	routingTable := &RoutingTable{}

@@ -20,15 +20,7 @@ func main() {
 	//generate hash for root node
 
 	fmt.Println("Pretending to run the kademlia app...")
-	//generate hash and create contact for our node.
-	/*	id_forOurNode := kademlia.NewKademliaID(generateHashforNode())
-		contact_OurNode := kademlia.NewContact(id_forOurNode, returnIpAddress())
 
-		//create a routing table for our node that has the root node and our node
-		rt := kademlia.NewRoutingTable(contact_OurNode)
-
-		address := returnIpAddress()
-	*/
 	test_nodelookup()
 	time.Sleep(time.Second * 10)
 	/*
@@ -132,7 +124,8 @@ func test_nodelookup() {
 		go kademlia.InitiateSenderForPong(contact.Address, stringmsg, rt, c1)
 		y := <-c1
 		fmt.Println(y)
-		nodelookup_func("172.16.238.2:8082", rt)
+		contacts := nodelookup_func("172.16.238.2:8082", rt)
+		fmt.Println(contacts)
 
 	} else if returnIpAddress() != "172.16.238.10:8080" {
 		go kademlia.InitiateSenderForPong(contact.Address, stringmsg, rt, c1)
@@ -322,6 +315,7 @@ func nodelookup_func(target_address string, rt *kademlia.RoutingTable) []kademli
 				fmt.Println("HELLO IN NODELOOKUp5")
 				ipaddr := closest_contacts[i].Address
 				sendingString = "find_node;" + ipaddr
+				fmt.Println("hellolookup123")
 				go kademlia.InitiateSender(ipaddr, []byte(sendingString), rt, c1)
 
 			}
