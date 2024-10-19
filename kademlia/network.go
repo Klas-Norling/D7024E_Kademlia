@@ -78,7 +78,7 @@ func decodeContactsFromBytes(data []byte) ([]Contact, error) {
 func NewListenFunc(ip string, rt *RoutingTable) {
 
 	ip, port := getIpPort(ip)
-
+	fmt.Println("Listen Listening on ip and port", ip, port)
 	ln, err := net.Listen("tcp", ip+":"+strconv.Itoa(port))
 	//fmt.Println("HELOOOOOOOOOOO1")
 	if err != nil {
@@ -97,7 +97,7 @@ func NewListenFunc(ip string, rt *RoutingTable) {
 		}
 		//	fmt.Println("HELLO2")
 		//go RPC_handler(conn, rt)
-		RPC_handler(conn, rt)
+		go RPC_handler(conn, rt)
 
 		fmt.Println("Listen Listening on ip and port", ip, port)
 		//	time.Sleep(3 * time.Second)
@@ -121,68 +121,114 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	receivedString := string(tmp[:n])
 	fmt.Println(receivedString)
 
-	hello := "cli;put auudau"
-	b1, b2 := MakeSenseOfStringMessage(hello)
-	fmt.Println("b1:", b1, "b2:", b2)
 	command, ipaddr := MakeSenseOfStringMessage(receivedString)
 	fmt.Println(command + ipaddr)
-
+	fmt.Println("command:", command, "other", ipaddr)
 	switch command {
 	case "store":
 		// Initialize or reset the store
+		kademlia := InitializeNode()
 
-	case "put":
-		// Put key-value pair in the store
-
-	case "cli":
+		address := conn.RemoteAddr().String()
+		id := NewKademliaID(address)
+		contact := NewContact(id, address)
+		rt.AddContact(contact)
+		kademlia.Store([]byte(ipaddr))
 
 	case "find_node":
 		// Get value by key
-		fmt.Println("You got inside: ", conn.RemoteAddr().String())
-		fmt.Println("Remoteaddr: ", conn.RemoteAddr().String())
-		fmt.Println("recieved string: ", receivedString)
-		fmt.Println("Hello1234forsender: ", ipaddr)
+
 		newip_forsender, newport_forsender := getdecrementIpPort(conn.RemoteAddr().String())
-		fmt.Println("Hello1234forsender: ", newip_forsender+":"+strconv.Itoa(newport_forsender))
-		address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
-		fmt.Println("Hello1234forsender: ", address_forsender)
+		contacts, contact := switch_case_find_node(newip_forsender, ipaddr, newport_forsender, rt)
+		/*
+			address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
 
-		//we generate a kademliaID for the sender
-		id_forsender := NewKademliaID(generateHashforNode(address_forsender))
-		contact_forsender := NewContact(id_forsender, address_forsender)
-		rt.AddContact(contact_forsender)
+			//we generate a kademliaID for the sender
+			id_forsender := NewKademliaID(generateHashforNode(address_forsender))
+			contact_forsender := NewContact(id_forsender, address_forsender)
+			rt.AddContact(contact_forsender)
 
-		newip, newport := getIpPort(ipaddr)
-		//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
-		address := newip + ":" + strconv.Itoa(newport)
-		//fmt.Println("Hello1234: ", address)
+			newip, newport := getIpPort(ipaddr)
+			//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
+			address := newip + ":" + strconv.Itoa(newport)
+			//fmt.Println("Hello1234: ", address)
 
-		id := NewKademliaID(generateHashforNode(address))
-		contact := NewContact(id, address)
-		rt.AddContact(contact)
+			id := NewKademliaID(generateHashforNode(address))
+			contact := NewContact(id, address)
+			rt.AddContact(contact)
 
-		//network_struct.SendFindContactMessage(&contact) //Useless???
-		//fmt.Println("HHHHHHHHHHHHHHHHHHHHH", contact.ID)
-		contacts := rt.FindClosestContacts(contact.ID, 20)
+			//network_struct.SendFindContactMessage(&contact) //Useless???
+			//fmt.Println("HHHHHHHHHHHHHHHHHHHHH", contact.ID)
+			contacts := rt.FindClosestContacts(contact.ID, 20)*/
 		//fmt.Println("HELELELLE", contacts[0].distance)
 		//fmt.Println("HELELELLE", *contacts[0].distance)
 		//fmt.Println(contacts)
 		//bytesof_contacts, err := encodeContactsToBytes(contacts)
 		//fmt.Println("HELLO!23")
 		//NewSenderFunc(conn, &contact, &rt.me, bytesof_contacts)
-		fmt.Println("ALL THE CONTACTS: ", contacts)
+
 		NewSenderFunc(conn, &contact, &rt.me, contacts)
 		UNUSED(err)
 
-	case "nodelookup":
-		//kadem.LookupContact(&contact)
+	case "ping":
+		fmt.Println("Connection was established to: ", conn.RemoteAddr())
+		sendstring := []byte("pong")
+		conn.Write(sendstring)
 
-	case "valuelookup":
-		//kadem.LookupData()
+	case "find_value":
+
+		address := conn.RemoteAddr().String()
+		data := switch_case_find_value(address, ipaddr, rt)
+		/*
+			kademlia := InitializeNode()
+			id := NewKademliaID(address)
+			contact := NewContact(id, address)
+			rt.AddContact(contact)
+			data := EncodeToBytes(kademlia.LookupData(ipaddr))*/
+		conn.Write(data)
+		defer conn.Close()
 
 	default:
-		return
+		fmt.Println("RPC HANDLER DEFAULT")
+		address := conn.RemoteAddr().String()
+		id := NewKademliaID(generateHashforNode(address))
+		contact := NewContact(id, address)
+		rt.AddContact(contact)
+
 	}
+
+}
+
+func switch_case_find_node(newip_forsender string, ipaddr string, newport_forsender int, rt *RoutingTable) ([]Contact, Contact) {
+	address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
+
+	//we generate a kademliaID for the sender
+	id_forsender := NewKademliaID(generateHashforNode(address_forsender))
+	contact_forsender := NewContact(id_forsender, address_forsender)
+	rt.AddContact(contact_forsender)
+
+	newip, newport := getIpPort(ipaddr)
+	//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
+	address := newip + ":" + strconv.Itoa(newport)
+	//fmt.Println("Hello1234: ", address)
+
+	//
+	id := NewKademliaID(generateHashforNode(address))
+	contact := NewContact(id, address)
+	rt.AddContact(contact)
+	contacts := rt.FindClosestContacts(contact.ID, 20)
+	fmt.Println("HELELELLELELELELELLELYEAH")
+	return contacts, contact
+}
+
+func switch_case_find_value(address string, ipaddr string, rt *RoutingTable) []byte {
+	kademlia := InitializeNode()
+	//id := NewKademliaID(address)
+	id := NewKademliaID(generateHashforNode(address))
+	contact := NewContact(id, address)
+	rt.AddContact(contact)
+	data := EncodeToBytes(kademlia.LookupData(ipaddr))
+	return data
 
 }
 
@@ -208,16 +254,16 @@ func InitiateSender(dst_address string, data []byte, rt *RoutingTable, c chan []
 	ip, port := getNewIpPort(address)
 	fmt.Println("in initiate sender address: ", address, " Port: ", port)
 	return_contacts := []Contact{}
-
+	fmt.Println("hello")
 	dialer := &net.Dialer{
 		LocalAddr: &net.TCPAddr{
 			IP:   net.ParseIP(ip),
 			Port: port,
 		},
 	}
-
+	fmt.Println("hello")
 	conn, err := dialer.Dial("tcp", dst_address)
-
+	fmt.Println("hello")
 	if err != nil {
 		fmt.Println("Error caught: ", err)
 		defer conn.Close()
@@ -225,96 +271,77 @@ func InitiateSender(dst_address string, data []byte, rt *RoutingTable, c chan []
 	} else {
 		conn.Write(data)
 		tmp := make([]byte, 2048)
+		fmt.Println("hello1")
 		time.Sleep(3 * time.Second)
 		n, err := conn.Read(tmp)
-		//fmt.Println("HEEEEEEEEEEEEEEELLLL")
-		//new, error :=
-
-		//decoder := gob.NewDecoder(conn)
-		// Decode the received data
-		//var listofcontacts []Contact
-		/*error123 := decoder.Decode(&listofcontacts)
-		if error123 != nil {
-			fmt.Println("Error decoding:", err)
-			return
-		}
-
-		fmt.Println("Received struct array:", listofcontacts)*/
 
 		receivedString := string(tmp[:n])
-		//fmt.Println("hello", receivedString)
+		fmt.Println("hello2")
+
 		recstring := []byte(receivedString)
+
 		new_recstring := DecodeToPerson(recstring)
-		//fmt.Println("Received from connection---:", new_recstring)
-
-		//create a contact for the destination ip
-
-		// Get value by key
-		//fmt.Println("You got inside: ", dst_address)
-		//newip, newport := getdecrementIpPort(dst_address)
-		//address := newip + ":" + strconv.Itoa(newport)
-		//id := NewKademliaID(generateHashforNode(address))
-		//dst_contact := NewContact(id, address)
-
-		//for _, contact := range new_recstring {
-		//fmt.Println("dst_contactid: ", dst_contact.ID)
-		//fmt.Println("the contact", contact)
-		//fmt.Println("distance: ", contact.ID.CalcDistance(dst_contact.ID))
-		//contact.CalcDistance(dst_contact.ID)
-		//}
-
-		//fmt.Println("Recieved string", new_recstring)
-		//for i := range new_recstring {
-		//rt.AddContact(new_recstring[i])
-		//}
-		//contacts := rt.FindClosestContacts(NewKademliaID("2111111400000000000000000000000000000000"), 20)
-		//for i := range contacts {
-		//	fmt.Println("AFTER", contacts[i].String())
-		//}
+		fmt.Println("HLLO")
 		UNUSED(err)
-		defer conn.Close()
-		//UNUSED(errors)
-		//UNUSED(n)
+
 		return_contacts = new_recstring
-		//fmt.Println("HELLO123422221", new_recstring)
-		//fmt.Println("HELLO12342222", return_contacts)
+		fmt.Println("HLLO2")
+		c <- return_contacts
+		fmt.Println("HLLO1")
 
 	}
+	defer conn.Close()
 	fmt.Println("HELLO", return_contacts)
-	//return return_contacts
 	fmt.Println("HELLO???")
-	c <- return_contacts
 
 }
 
-func NewSenderFunc_Nodelookup(contact_other *Contact, contact_own *Contact, data []byte) {
-	ip, port := getIpPort(contact_own.Address)
-	fmt.Println(ip, port)
+func InitiateSenderForPong(dst_address string, data []byte, rt *RoutingTable, c chan string) {
+	address := returnIpAddress()
 
+	ip, port := getNewIpPort(address)
+	fmt.Println("in initiate sender address: ", address, " Port: ", port)
+
+	fmt.Println("hello")
 	dialer := &net.Dialer{
 		LocalAddr: &net.TCPAddr{
 			IP:   net.ParseIP(ip),
 			Port: port,
 		},
 	}
-
-	conn, err := dialer.Dial("tcp", contact_other.Address)
+	fmt.Println("hello")
+	conn, err := dialer.Dial("tcp", dst_address)
+	fmt.Println("hello")
 	if err != nil {
 		fmt.Println("Error caught: ", err)
 		defer conn.Close()
+
+	} else {
+		conn.Write(data)
+		tmp := make([]byte, 2048)
+		fmt.Println("hello1")
+		time.Sleep(3 * time.Second)
+		n, err := conn.Read(tmp)
+
+		receivedString := string(tmp[:n])
+		fmt.Println("hello2")
+
+		fmt.Println("HLLO")
+		UNUSED(err)
+
+		return_contacts := receivedString
+		fmt.Println("HLLO2")
+		c <- return_contacts
+		fmt.Println("HLLO1")
+
 	}
+	defer conn.Close()
 
-	fmt.Println("Connection was established to: ", conn.RemoteAddr())
+	fmt.Println("HELLO???")
 
-	conn.Write([]byte("join"))
-	tmp := make([]byte, 1024)
-	time.Sleep(3 * time.Second)
-	n, err := conn.Read(tmp)
-	fmt.Println(n)
-	receivedString := string(tmp[:n])
-	fmt.Println(receivedString)
 }
 
+/*
 func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 	ln, err := net.Listen("tcp", ip+":"+strconv.Itoa(port))
 
@@ -342,8 +369,8 @@ func Listen(ip string, port int, numberofreplicas *int, rt *RoutingTable) {
 		RPC_handler(conn, rt)
 	}
 
-}
-
+}*/
+/*
 func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 	// handle incoming messages here
 	fmt.Println("Connection accepted from", conn.RemoteAddr().String())
@@ -387,11 +414,11 @@ func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 
 	//return conn
 	defer conn.Close()
-}
+}*/
 
 func SendPingMessage(contact_root *Contact, contact_own *Contact) {
 
-	ip, port := getIpPort(contact_own.Address)
+	ip, port := getNewNEWIpPort(contact_own.Address)
 	fmt.Println(ip, port)
 
 	dialer := &net.Dialer{
@@ -400,14 +427,15 @@ func SendPingMessage(contact_root *Contact, contact_own *Contact) {
 			Port: port,
 		},
 	}
-
+	fmt.Println("root_ ", contact_root.Address)
+	fmt.Println("own_ ", contact_own.Address)
 	conn, err := dialer.Dial("tcp", contact_root.Address)
 	if err != nil {
 		fmt.Println("Error caught: ", err)
-		defer conn.Close()
-	}
 
-	fmt.Println("Connection was established to: ", conn.RemoteAddr())
+	}
+	defer conn.Close()
+	fmt.Println("Connection was established to---: ", conn.RemoteAddr())
 }
 
 func getIpPort(address string) (ip string, port int) {
@@ -436,6 +464,16 @@ func getNewIpPort(address string) (ip string, port int) {
 	return ip_address, new_port_number
 }
 
+func getNewNEWIpPort(address string) (ip string, port int) {
+	port_number, err := strconv.Atoi(address[len(address)-4:])
+	new_port_number := port_number + 2
+	UNUSED(err)
+	ip_address := address[:len(address)-5]
+	fmt.Println("port number: ", new_port_number, "ip_address: ", ip_address)
+	return ip_address, new_port_number
+}
+
+/*
 func Join(dst_address string, rt *RoutingTable) {
 	address := returnIpAddress()
 
@@ -486,16 +524,95 @@ func Join(dst_address string, rt *RoutingTable) {
 	}
 
 }
-
+*/
 // this is our FindNode()
-func (network *Network) SendFindContactMessage(contact *Contact) {
-	// TODO
+func (network *Network) SendFindContactMessage(contact Contact) {
+	address := returnIpAddress()
+
+	ip, port := getIpPort(address)
+	fmt.Println("address: ", address, " Port: ", port)
+
+	dialer := &net.Dialer{
+		LocalAddr: &net.TCPAddr{
+			IP:   net.ParseIP(ip),
+			Port: port,
+		},
+	}
+	conn, err := dialer.Dial("tcp", contact.Address)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+	} else {
+		encode := EncodeToBytes("find_node;" + contact.Address)
+		conn.Write(encode)
+		tmp := make([]byte, 1024)
+		time.Sleep(3 * time.Second)
+		n, err := conn.Read(tmp)
+		UNUSED(n, err)
+		// receivedString := string(tmp[:n])
+
+	}
 }
 
-func (network *Network) SendFindDataMessage(hash string) {
-	// TODO
+func (network *Network) SendFindDataMessage(hash string, contact Contact) string {
+	address := returnIpAddress()
+
+	ip, port := getIpPort(address)
+	fmt.Println("address: ", address, " Port: ", port)
+
+	dialer := &net.Dialer{
+		LocalAddr: &net.TCPAddr{
+			IP:   net.ParseIP(ip),
+			Port: port,
+		},
+	}
+
+	conn, err := dialer.Dial("tcp", contact.Address)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+		defer conn.Close()
+	} else {
+		encode := EncodeToBytes("find_value;" + hash)
+		conn.Write(encode)
+		tmp := make([]byte, 1024)
+		time.Sleep(3 * time.Second)
+		n, err := conn.Read(tmp)
+		UNUSED(err)
+		receivedString := string(tmp[:n])
+
+		return receivedString
+
+	}
+
+	return "Error"
+
 }
 
-func (network *Network) SendStoreMessage(data []byte) {
-	// TODO
+func (network *Network) SendStoreMessage(data string, contact Contact) {
+	address := returnIpAddress()
+
+	ip, port := getIpPort(address)
+	fmt.Println("address: ", address, " Port: ", port)
+
+	dialer := &net.Dialer{
+		LocalAddr: &net.TCPAddr{
+			IP:   net.ParseIP(ip),
+			Port: port,
+		},
+	}
+	conn, err := dialer.Dial("tcp", contact.Address)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+	} else {
+		encode := EncodeToBytes("store;" + data)
+		conn.Write(encode)
+		tmp := make([]byte, 1024)
+		time.Sleep(3 * time.Second)
+		n, err := conn.Read(tmp)
+		UNUSED(n, err)
+		// receivedString := string(tmp[:n])
+
+	}
 }

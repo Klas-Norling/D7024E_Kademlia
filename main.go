@@ -29,58 +29,61 @@ func main() {
 
 		address := returnIpAddress()
 	*/
+	test_nodelookup()
+	time.Sleep(time.Second * 10)
+	/*
 
-	if returnIpAddress() == "172.16.238.10:8080" {
-		root_id := kademlia.NewKademliaID(generateHashForRootNode())
-		contact := kademlia.NewContact(root_id, "172.16.238.10:8080")
-		rt := kademlia.NewRoutingTable(contact)
-		//numberofreplicas := 0
-		//kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
-		go kademlia.NewListenFunc("172.16.238.10:8080", rt)
+		if returnIpAddress() == "172.16.238.10:8080" {
+			root_id := kademlia.NewKademliaID(generateHashForRootNode())
+			contact := kademlia.NewContact(root_id, "172.16.238.10:8080")
+			rt := kademlia.NewRoutingTable(contact)
+			//numberofreplicas := 0
+			//kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
+			go kademlia.NewListenFunc("172.16.238.10:8080", rt)
 
-	} else {
+		} else {
 
-		root_node_id := kademlia.NewKademliaID(generateHashForRootNode())
-		root_ipaddress := "172.16.238.10:8080"
-		root_contact := kademlia.NewContact(root_node_id, root_ipaddress)
+			root_node_id := kademlia.NewKademliaID(generateHashForRootNode())
+			root_ipaddress := "172.16.238.10:8080"
+			root_contact := kademlia.NewContact(root_node_id, root_ipaddress)
 
-		node_id := kademlia.NewKademliaID(GenerateHashforNode())
-		ipaddress := returnIpAddress()
+			node_id := kademlia.NewKademliaID(GenerateHashforNode())
+			ipaddress := returnIpAddress()
 
-		//ip, port := getIpPort(ipaddress)
-		contact := kademlia.NewContact(node_id, ipaddress)
-		rt := kademlia.NewRoutingTable(contact)
-		rt.AddContact(root_contact)
+			//ip, port := getIpPort(ipaddress)
+			contact := kademlia.NewContact(node_id, ipaddress)
+			rt := kademlia.NewRoutingTable(contact)
+			rt.AddContact(root_contact)
 
-		go kademlia.NewListenFunc(ipaddress, rt)
+			go kademlia.NewListenFunc(ipaddress, rt)
 
-		//sendingstring := ([]byte("find_node" + ";" + ipaddress))
-		//fmt.Println(ipaddress)
-		time.Sleep(3 * time.Second)
-		contacts := rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
-		fmt.Println("BEFORE:------------------")
-		for i := range contacts {
-			fmt.Println("BEFORE:------------------", contacts[i].String())
+			//sendingstring := ([]byte("find_node" + ";" + ipaddress))
+			//fmt.Println(ipaddress)
+			time.Sleep(3 * time.Second)
+			contacts := rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+			fmt.Println("BEFORE:------------------")
+			for i := range contacts {
+				fmt.Println("BEFORE:------------------", contacts[i].String())
+			}
+
+			//nodelookup_func("172.16.238.10:8080", "172.16.238.3:8083", rt)
+			//node
+
+			//returned_contacts := kademlia.InitiateSender("172.16.238.10:8080", sendingstring, rt)
+			UNUSED(rt)
+			contacts = rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
+			for i := range contacts {
+				fmt.Println("AFTER IN MAIN:", contacts[i].String())
+			}
+			//fmt.Println("returned contacts: ", returned_contacts)
+
 		}
 
-		nodelookup_func("172.16.238.10:8080", "172.16.238.3:8083", rt)
-		//node
+		//NODELOOKUP
 
-		//returned_contacts := kademlia.InitiateSender("172.16.238.10:8080", sendingstring, rt)
-		UNUSED(rt)
-		contacts = rt.FindClosestContacts(kademlia.NewKademliaID("2111111400000000000000000000000000000000"), 20)
-		for i := range contacts {
-			fmt.Println("AFTER IN MAIN:", contacts[i].String())
-		}
-		//fmt.Println("returned contacts: ", returned_contacts)
-
-	}
-
-	//NODELOOKUP
-
-	time.Sleep(10 * time.Second)
-	fmt.Println("Closed down")
-
+		time.Sleep(10 * time.Second)
+		fmt.Println("Closed down")
+	*/
 }
 
 func test(contact_root *kademlia.Contact, contact_own *kademlia.Contact) {
@@ -95,6 +98,48 @@ func test(contact_root *kademlia.Contact, contact_own *kademlia.Contact) {
 
 	}
 
+}
+
+func test_nodelookup() {
+	c1 := make(chan string)
+	//numberofreplicas := 0
+	//kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
+	root_node_id := kademlia.NewKademliaID(generateHashForRootNode())
+	root_ipaddress := "172.16.238.10:8080"
+	root_contact := kademlia.NewContact(root_node_id, root_ipaddress)
+
+	node_id := kademlia.NewKademliaID(GenerateHashforNode())
+	ipaddress := returnIpAddress()
+
+	//ip, port := getIpPort(ipaddress)
+	contact := kademlia.NewContact(node_id, ipaddress)
+	rt := kademlia.NewRoutingTable(contact)
+	rt.AddContact(root_contact)
+
+	go kademlia.NewListenFunc(ipaddress, rt)
+
+	//sendingstring := ([]byte("find_node" + ";" + ipaddress))
+	//fmt.Println(ipaddress)
+	time.Sleep(3 * time.Second)
+	stringmsg := []byte("ping;p")
+
+	fmt.Println("IPADDRRRRRRRRRRRRRRRRR", returnIpAddress())
+
+	if returnIpAddress() != "172.16.238.10:8080" && returnIpAddress() == "172.16.238.3:8083" {
+		fmt.Println("test_nodelookup, before sendpingmessage")
+		time.Sleep(1 * time.Second)
+		fmt.Println("HOW MANY TIMES")
+		go kademlia.InitiateSenderForPong(contact.Address, stringmsg, rt, c1)
+		y := <-c1
+		fmt.Println(y)
+		nodelookup_func("172.16.238.2:8082", rt)
+
+	} else if returnIpAddress() != "172.16.238.10:8080" {
+		go kademlia.InitiateSenderForPong(contact.Address, stringmsg, rt, c1)
+		fmt.Println("HOW MANY TIMES")
+		y := <-c1
+		fmt.Println(y)
+	}
 }
 
 func generateHashForRootNode() string {
@@ -238,7 +283,7 @@ func addcontacts(rt *kademlia.RoutingTable) {
 	sendingstring := ([]byte("find_node" + ";" + ipaddress))
 */
 
-func nodelookup_func(dst_address string, target_address string, rt *kademlia.RoutingTable) []kademlia.Contact {
+func nodelookup_func(target_address string, rt *kademlia.RoutingTable) []kademlia.Contact {
 	target := kademlia.NewContact(kademlia.NewKademliaID(generateHashforTargetNode(target_address)), target_address)
 
 	closest_contacts := rt.FindClosestContacts(target.ID, 3)

@@ -47,6 +47,9 @@ func returnIpAddress() string {
 	port := port1 + port2
 
 	address := fmt.Sprintf("%v:", hostid[0]) + fmt.Sprintf("%v", port)
+	if address == "172.16.238.10:8090" {
+		return "172.16.238.10:8080"
+	}
 
 	UNUSED(err1, err)
 
