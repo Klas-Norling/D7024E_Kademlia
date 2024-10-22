@@ -20,9 +20,11 @@ func main() {
 	//generate hash for root node
 
 	fmt.Println("Pretending to run the kademlia app...")
-
-	test_nodelookup()
-	time.Sleep(time.Second * 10)
+	kademlia.CLIFORNODES()
+	time.Sleep(60 * time.Second)
+	kademlia.CLIFORNODES()
+	//test_nodelookup()
+	//time.Sleep(time.Second * 10)
 	/*
 
 		if returnIpAddress() == "172.16.238.10:8080" {
