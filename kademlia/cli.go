@@ -1,54 +1,51 @@
 package kademlia
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"strings"
+	"time"
 )
 
 func Cli(rt *RoutingTable) {
-
-	fmt.Println("Enter commands")
-	reader := bufio.NewReader(os.Stdin)
-	text, _ := reader.ReadString('\n')
-	text = strings.TrimSpace(text)
-	inputHandler(text, rt)
+	kad := InitializeNode()
+	for true {
+		//fmt.Println("Enter commands")
+		time.Sleep(time.Second * 1)
+		words := CLIFORNODES()
+		inputHandler(words, rt, &kad)
+	}
 }
 
-func inputHandler(input string, rt *RoutingTable) {
-	fmt.Println("Input:" + input)
+func inputHandler(input []string, rt *RoutingTable, kad *Kademlia) {
 
-	split := strings.SplitN(input, " ", 2)
-	command := split[0]
-	content := split[1]
+	//fmt.Println("hello gain CLI")
+	//fmt.Println(input[0])
+	//fmt.Println("hello gain CLI")
 
-	var network = Network{}
-	var kademlia = Kademlia{}
-
-	switch command {
+	switch input[0] {
 
 	case "put":
 		fmt.Println("Putter")
-		fmt.Println("Content: ", content)
-
-		kademlia.Store([]byte(content))
+		fmt.Println("Content: ", input[1])
+		store_in_bytes := []byte(input[1])
+		fmt.Println(store_in_bytes)
+		kad.Store(store_in_bytes)
 
 		// hash := kad.Store([]byte(content))
 		// fmt.Println(hash)
 
 		contacts := rt.FindClosestContacts(rt.me.ID, 3)
-		/*
-			for i := 0; i < len(contacts); i++ {
-				network.SendStoreMessage([]byte(content), contacts[i])
-			}*/
-		UNUSED(contacts, network)
+
+		for i := 0; i < len(contacts); i++ {
+			kad.network.SendStoreMessage(input[1], contacts[i])
+		}
+		UNUSED(contacts)
 
 	case "get":
-		fmt.Println("Putter")
-		fmt.Println("Content: ", content)
+		fmt.Println("Getter")
+		fmt.Println("Content: ", input[1])
 
-		kademlia.LookupData(content)
+		kad.LookupData(input[1])
 
 		// value := kad.LookupData(content)
 		// fmt.Println(value)
@@ -56,6 +53,8 @@ func inputHandler(input string, rt *RoutingTable) {
 	case "exit":
 		fmt.Println("Exiting")
 		os.Exit(0)
+
+	case "hello":
 
 	default:
 		fmt.Println("Command not found")

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func CLIFORNODES() {
+func CLIFORNODES() []string {
 	// Define the file path
 	filePath := "file.txt"
 
@@ -16,7 +16,7 @@ func CLIFORNODES() {
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
-		return
+
 	}
 	defer file.Close()
 
@@ -29,23 +29,24 @@ func CLIFORNODES() {
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error reading file:", err)
-		return
+
 	}
 
 	// Step 2: Split the file content into words and print each word
 	words := strings.Fields(content) // Fields splits the content by spaces and newlines
-	for _, word := range words {
-		fmt.Println(word)
-	}
+	//for _, word := range words {
+	//fmt.Println(word)
+	//}
 
 	// Step 3: Overwrite the file with a space
-	err = ioutil.WriteFile(filePath, []byte(" "), 0644)
+	err = ioutil.WriteFile(filePath, []byte("hello"), 0644)
 	if err != nil {
 		fmt.Println("Error writing to file:", err)
-		return
+
 	}
 
-	fmt.Println("File contents replaced with a space.")
+	//fmt.Println("File contents replaced with a space.")
+	return words
 }
 
 func Clifornode() {

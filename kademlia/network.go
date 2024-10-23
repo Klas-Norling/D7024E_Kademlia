@@ -19,6 +19,7 @@ type netnet struct {
 
 func MakeSenseOfStringMessage(recieved string) (string, string) {
 	// Split the string by the semicolon
+	fmt.Println("recieved: ", recieved)
 	parts := strings.SplitN(recieved, ";", 2)
 
 	// If there are two parts, return them
@@ -108,11 +109,13 @@ func NewListenFunc(ip string, rt *RoutingTable) {
 
 func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	//
+	address := conn.RemoteAddr().String()
+	id := NewKademliaID(generateHashforNode(address))
+	contact := NewContact(id, address)
+	rt.AddContact(contact)
 
 	tmp := make([]byte, 1024)
 	n, err := conn.Read(tmp)
-	//root_id := NewKademliaID(generateHashForRootNode())
-	//contact := NewContact(root_id, "172.16.238.10:8080")
 	//var kadem = Kademlia{}
 	//var network_struct = Network{}
 
@@ -127,12 +130,18 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	switch command {
 	case "store":
 		// Initialize or reset the store
+		fmt.Println("HELLO")
 		kademlia := InitializeNode()
 
 		address := conn.RemoteAddr().String()
-		id := NewKademliaID(address)
+		fmt.Println("ipaddr:" + ipaddr)
+
+		id := NewKademliaID(generateHashforNode(address))
+		fmt.Println("ipaddr:" + ipaddr)
 		contact := NewContact(id, address)
+		fmt.Println("ipaddr:" + ipaddr)
 		rt.AddContact(contact)
+		fmt.Println("ipaddr:" + ipaddr)
 		kademlia.Store([]byte(ipaddr))
 
 	case "find_node":
@@ -179,6 +188,7 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 
 		address := conn.RemoteAddr().String()
 		data := switch_case_find_value(address, ipaddr, rt)
+		fmt.Println("datavalue:", string(data))
 		/*
 			kademlia := InitializeNode()
 			id := NewKademliaID(address)
@@ -226,7 +236,7 @@ func switch_case_find_value(address string, ipaddr string, rt *RoutingTable) []b
 	id := NewKademliaID(generateHashforNode(address))
 	contact := NewContact(id, address)
 	rt.AddContact(contact)
-	data := EncodeToBytes(kademlia.LookupData(ipaddr))
+	data := kademlia.LookupData(ipaddr)
 	return data
 
 }
@@ -419,7 +429,7 @@ func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 
 func SendPingMessage(contact_root *Contact, contact_own *Contact) {
 
-	ip, port := getNewNEWIpPort(contact_own.Address)
+	ip, port := getIpPort(contact_own.Address)
 	fmt.Println(ip, port)
 
 	dialer := &net.Dialer{
@@ -435,8 +445,15 @@ func SendPingMessage(contact_root *Contact, contact_own *Contact) {
 		fmt.Println("Error caught: ", err)
 
 	}
+	encode := []byte("ping")
+	conn.Write(encode)
+	tmp := make([]byte, 1024)
+	n, err := conn.Read(tmp)
+	UNUSED(n, err)
+
 	defer conn.Close()
 	fmt.Println("Connection was established to---: ", conn.RemoteAddr())
+
 }
 
 func getIpPort(address string) (ip string, port int) {
@@ -574,7 +591,7 @@ func (network *Network) SendFindDataMessage(hash string, contact Contact) string
 		fmt.Println("Error: ", err)
 		defer conn.Close()
 	} else {
-		encode := EncodeToBytes("find_value;" + hash)
+		encode := []byte("find_value;" + hash)
 		conn.Write(encode)
 		tmp := make([]byte, 1024)
 		time.Sleep(3 * time.Second)
@@ -592,8 +609,8 @@ func (network *Network) SendFindDataMessage(hash string, contact Contact) string
 
 func (network *Network) SendStoreMessage(data string, contact Contact) {
 	address := returnIpAddress()
-
-	ip, port := getIpPort(address)
+	fmt.Println("contact: ", contact)
+	ip, port := getNewIpPort(address)
 	fmt.Println("address: ", address, " Port: ", port)
 
 	dialer := &net.Dialer{
@@ -607,7 +624,7 @@ func (network *Network) SendStoreMessage(data string, contact Contact) {
 	if err != nil {
 		fmt.Println("Error: ", err)
 	} else {
-		encode := EncodeToBytes("store;" + data)
+		encode := []byte("store;" + data)
 		conn.Write(encode)
 		tmp := make([]byte, 1024)
 		time.Sleep(3 * time.Second)
@@ -616,4 +633,9 @@ func (network *Network) SendStoreMessage(data string, contact Contact) {
 		// receivedString := string(tmp[:n])
 
 	}
+	defer conn.Close()
 }
+
+//docker exec -it new_kadem-root_node-1 /bin/sh
+
+//./command.sh file.txt "put 1234klas"

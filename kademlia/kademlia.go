@@ -54,16 +54,15 @@ func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 
 		// Finding the three closest nodes
 		closest_contacts = kademlia.rt.FindClosestContacts(kademlia.rt.me.ID, k)
-		/*
-			for i := 0; i < len(closest_contacts); i++ {
-				contact := closest_contacts[i]
-				data := kademlia.network.SendFindDataMessage(hash, contact)
 
-				kademlia.Store(data)
+		for i := 0; i < len(closest_contacts); i++ {
+			contact := closest_contacts[i]
+			data := kademlia.network.SendFindDataMessage(hash, contact)
 
-				fmt.Println("Stored value: ", string(data))
+			fmt.Println("Stored value: ", string(data))
 
-			}*/
+		}
+		kademlia.Store(data)
 		//remove UNUSED
 		UNUSED(closest_contacts)
 
@@ -75,11 +74,13 @@ func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 // Takes data and hashes it to a 160 bit key then converts into hexadecimal
 // Note: Need to add a handle RPC file seperates lookupdata, store and lookupcontact
 func (kademlia *Kademlia) Store(data []byte) {
+	fmt.Println("hellostore")
 	hash := sha1.New()
 	hash.Write(data)
 	sha1_data := hex.EncodeToString(hash.Sum(nil))
-
+	fmt.Println("sha1_data: ", sha1_data)
 	kademlia.data[sha1_data] = data
+	fmt.Println("hellostor3")
 
 }
 

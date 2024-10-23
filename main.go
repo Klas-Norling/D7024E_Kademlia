@@ -19,10 +19,32 @@ import (
 func main() {
 	//generate hash for root node
 
-	fmt.Println("Pretending to run the kademlia app...")
-	kademlia.CLIFORNODES()
-	time.Sleep(60 * time.Second)
-	kademlia.CLIFORNODES()
+	root_node_id := kademlia.NewKademliaID(generateHashForRootNode())
+	root_ipaddress := "172.16.238.10:8080"
+	root_contact := kademlia.NewContact(root_node_id, root_ipaddress)
+
+	node_id := kademlia.NewKademliaID(GenerateHashforNode())
+	ipaddress := returnIpAddress()
+
+	//ip, port := getIpPort(ipaddress)
+	contact := kademlia.NewContact(node_id, ipaddress)
+	rt := kademlia.NewRoutingTable(contact)
+
+	if "172.16.238.10:8080" != returnIpAddress() {
+		fmt.Println(returnIpAddress())
+		rt.AddContact(root_contact)
+		time.Sleep(time.Second * 3)
+		kademlia.SendPingMessage(&root_contact, &contact)
+		go kademlia.NewListenFunc(returnIpAddress(), rt)
+
+	} else {
+		go kademlia.Cli(rt)
+		go kademlia.NewListenFunc(returnIpAddress(), rt)
+
+	}
+
+	for true {
+	}
 	//test_nodelookup()
 	//time.Sleep(time.Second * 10)
 	/*
