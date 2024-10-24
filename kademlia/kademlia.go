@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"time"
 )
 
 type Kademlia struct {
@@ -19,6 +20,9 @@ func InitializeNode() Kademlia {
 	contact := NewContact(id, returnIpAddress())
 
 	var rt RoutingTable = *NewRoutingTable(contact)
+
+	go NewListenFunc(contact.Address, &rt)
+	time.Sleep(time.Second * 1)
 
 	kademlia := Kademlia{
 		//NetworkInterface: network,

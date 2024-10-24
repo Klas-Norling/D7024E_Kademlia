@@ -2,7 +2,6 @@ package kademlia
 
 const bucketSize = 20
 
-
 // RoutingTable definition
 // keeps a refrence contact of me and an array of buckets
 type RoutingTable struct {
@@ -18,6 +17,10 @@ func NewRoutingTable(me Contact) *RoutingTable {
 	}
 	routingTable.me = me
 	return routingTable
+}
+
+func GetRoutingTableMe(rt RoutingTable) Contact {
+	return rt.me
 }
 
 // AddContact add a new contact to the correct Bucket
