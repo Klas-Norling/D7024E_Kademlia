@@ -109,15 +109,17 @@ func NewListenFunc(ip string, rt *RoutingTable) {
 
 func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	//
-	address := conn.RemoteAddr().String()
+	old_address := conn.RemoteAddr().String()
+	address, ip_port := getdecrementIpPort(old_address)
+	address = address + ":" + string(ip_port)
 	id := NewKademliaID(generateHashforNode(address))
 	contact := NewContact(id, address)
 	rt.AddContact(contact)
 
 	tmp := make([]byte, 1024)
 	n, err := conn.Read(tmp)
-	//var kadem = Kademlia{}
-	//var network_struct = Network{}
+	contactsrt := rt.FindClosestContacts(rt.me.ID, 3)
+	fmt.Println("contactsrt: ", contactsrt)
 
 	UNUSED(err)
 
@@ -143,6 +145,7 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 		rt.AddContact(contact)
 		fmt.Println("ipaddr:" + ipaddr)
 		kademlia.Store([]byte(ipaddr))
+		conn.Close()
 
 	case "find_node":
 		// Get value by key
@@ -178,11 +181,13 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 
 		NewSenderFunc(conn, &contact, &rt.me, contacts)
 		UNUSED(err)
+		conn.Close()
 
 	case "ping":
 		fmt.Println("Connection was established to: ", conn.RemoteAddr())
 		sendstring := []byte("pong")
 		conn.Write(sendstring)
+		conn.Close()
 
 	case "find_value":
 
@@ -196,6 +201,7 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 			rt.AddContact(contact)
 			data := EncodeToBytes(kademlia.LookupData(ipaddr))*/
 		conn.Write(data)
+		conn.Close()
 
 	default:
 		fmt.Println("RPC HANDLER DEFAULT")
@@ -203,18 +209,21 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 		id := NewKademliaID(generateHashforNode(address))
 		contact := NewContact(id, address)
 		rt.AddContact(contact)
+		conn.Close()
 
 	}
 
 }
 
 func switch_case_find_node(newip_forsender string, ipaddr string, newport_forsender int, rt *RoutingTable) ([]Contact, Contact) {
-	address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
+	/*
+		address_forsender := newip_forsender + ":" + strconv.Itoa(newport_forsender)
 
-	//we generate a kademliaID for the sender
-	id_forsender := NewKademliaID(generateHashforNode(address_forsender))
-	contact_forsender := NewContact(id_forsender, address_forsender)
-	rt.AddContact(contact_forsender)
+		//we generate a kademliaID for the sender
+
+		id_forsender := NewKademliaID(generateHashforNode(address_forsender))
+		contact_forsender := NewContact(id_forsender, address_forsender)
+		rt.AddContact(contact_forsender)*/
 
 	newip, newport := getIpPort(ipaddr)
 	//fmt.Println("Hello1234: ", newip+":"+strconv.Itoa(newport))
@@ -224,7 +233,7 @@ func switch_case_find_node(newip_forsender string, ipaddr string, newport_forsen
 	//
 	id := NewKademliaID(generateHashforNode(address))
 	contact := NewContact(id, address)
-	rt.AddContact(contact)
+	//rt.AddContact(contact)
 	contacts := rt.FindClosestContacts(contact.ID, 20)
 	fmt.Println("HELELELLELELELELELLELYEAH")
 	return contacts, contact
@@ -429,7 +438,7 @@ func handleConnection(conn net.Conn, numberofreplicas *int, rt *RoutingTable) {
 
 func SendPingMessage(contact_root *Contact, contact_own *Contact) {
 
-	ip, port := getIpPort(contact_own.Address)
+	ip, port := getNewIpPort(contact_own.Address)
 	fmt.Println(ip, port)
 
 	dialer := &net.Dialer{
@@ -469,7 +478,19 @@ func getdecrementIpPort(address string) (ip string, port int) {
 	new_portnumber := port_number - 1
 	UNUSED(err)
 	ip_address := address[:len(address)-5]
-	fmt.Println("--port number: ", port_number, "--ip_address: ", ip_address)
+	fmt.Println("pppppport number: ", port_number, "--ip_address: ", ip_address)
+
+	return ip_address, new_portnumber
+}
+
+func GetdecrementIpPort(address string) (ip string, port int) {
+	port_number, err := strconv.Atoi(address[len(address)-4:])
+	fmt.Println("what does this print:", address[:len(address)-5])
+	new_portnumber := port_number - 1
+	UNUSED(err)
+	ip_address := address[:len(address)-5]
+	fmt.Println("pppppport number: ", port_number, "--ip_address: ", ip_address)
+
 	return ip_address, new_portnumber
 }
 
@@ -543,11 +564,12 @@ func Join(dst_address string, rt *RoutingTable) {
 
 }
 */
+
 // this is our FindNode()
 func (network *Network) SendFindContactMessage(contact Contact) {
 	address := returnIpAddress()
 
-	ip, port := getIpPort(address)
+	ip, port := getNewIpPort(address)
 	fmt.Println("address: ", address, " Port: ", port)
 
 	dialer := &net.Dialer{
@@ -575,7 +597,7 @@ func (network *Network) SendFindContactMessage(contact Contact) {
 func (network *Network) SendFindDataMessage(hash string, contact Contact) string {
 	address := returnIpAddress()
 
-	ip, port := getIpPort(address)
+	ip, port := getNewIpPort(address)
 	fmt.Println("address: ", address, " Port: ", port)
 
 	dialer := &net.Dialer{
@@ -589,7 +611,7 @@ func (network *Network) SendFindDataMessage(hash string, contact Contact) string
 
 	if err != nil {
 		fmt.Println("Error: ", err)
-		defer conn.Close()
+		conn.Close()
 	} else {
 		encode := []byte("find_value;" + hash)
 		conn.Write(encode)
@@ -598,11 +620,12 @@ func (network *Network) SendFindDataMessage(hash string, contact Contact) string
 		n, err := conn.Read(tmp)
 		UNUSED(err)
 		receivedString := string(tmp[:n])
+		conn.Close()
 
 		return receivedString
 
 	}
-
+	defer conn.Close()
 	return "Error"
 
 }
@@ -623,6 +646,7 @@ func (network *Network) SendStoreMessage(data string, contact Contact) {
 
 	if err != nil {
 		fmt.Println("Error: ", err)
+		conn.Close()
 	} else {
 		encode := []byte("store;" + data)
 		conn.Write(encode)
@@ -630,6 +654,7 @@ func (network *Network) SendStoreMessage(data string, contact Contact) {
 		time.Sleep(3 * time.Second)
 		n, err := conn.Read(tmp)
 		UNUSED(n, err)
+		conn.Close()
 		// receivedString := string(tmp[:n])
 
 	}

@@ -42,9 +42,11 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 // the associated data is returned
 func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 	value, exists := kademlia.data[hash]
+	fmt.Println("hash value: ", hash)
+	new_hash := NewKademliaID(hash)
 
 	if exists {
-		fmt.Println("Value already exists: ", value)
+		fmt.Println("Value already exists: ", string(value))
 
 	} else {
 		fmt.Println("Value does not exists, searching for value in k closest contacts")
@@ -53,9 +55,10 @@ func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 		k := 3
 
 		// Finding the three closest nodes
-		closest_contacts = kademlia.rt.FindClosestContacts(kademlia.rt.me.ID, k)
-
+		closest_contacts = kademlia.rt.FindClosestContacts(new_hash, k)
+		fmt.Println(closest_contacts)
 		for i := 0; i < len(closest_contacts); i++ {
+			fmt.Println(closest_contacts)
 			contact := closest_contacts[i]
 			data := kademlia.network.SendFindDataMessage(hash, contact)
 

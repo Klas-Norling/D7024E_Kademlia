@@ -6,13 +6,16 @@ import (
 	"time"
 )
 
-func Cli(rt *RoutingTable) {
-	kad := InitializeNode()
+func Cli(kad *Kademlia) {
+	//kad := InitializeNode()
+	//fmt.Println("CLI RT", rt.FindClosestContacts(rt.me.ID, 3))
+	//kad.rt = *rt
 	for true {
 		//fmt.Println("Enter commands")
 		time.Sleep(time.Second * 1)
 		words := CLIFORNODES()
-		inputHandler(words, rt, &kad)
+		rt := kad.GetRoutingtable()
+		inputHandler(words, &rt, kad)
 	}
 }
 
