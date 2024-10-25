@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	// "math/big"
 
@@ -378,17 +379,40 @@ func nodelookup_func(target_address string, rt *kademlia.RoutingTable) []kademli
 
 	}
 	array := shortlist.GetContacts(4)
-	for i := range array {
-		address, ip_port := getIpPort(array[i].Address)
-		newip_address := address + string(return_last_number_of_ipadress())
-		fmt.Println("ARE THE ADDRESSES WORKING?:", address+string(return_last_number_of_ipadress()))
-		array[i].Address = newip_address
-		UNUSED(ip_port)
-	}
-
-	fmt.Println("Closest contacts final ound:", array)
+	new_shortlist := fixPortInShortlist(array)
+	fmt.Println("New shortlist: ", new_shortlist)
 
 	return closest_contacts
+}
+
+func fixPortInShortlist(shortlist []kademlia.Contact) []kademlia.Contact {
+	var root_index int
+	for i := range shortlist {
+		fmt.Println(shortlist[i].Address)
+		split := strings.Split(shortlist[i].Address, ":")
+		ipaddress := split[0]
+		spliceIp := strings.Split(ipaddress, ".")
+		last_number_in_ip, err := strconv.Atoi(spliceIp[3])
+		new_portnumber := 8080 + last_number_in_ip
+		new_ip := ipaddress + ":" + strconv.Itoa(new_portnumber)
+		shortlist[i].Address = new_ip
+		if ipaddress == "172.16.238.10" {
+			shortlist[i].Address = "172.16.238.10:8080"
+		}
+		fmt.Println("returnipaddress: ", returnIpAddress())
+		if returnIpAddress() == new_ip {
+			fmt.Println("In returnipadress if statement")
+			root_index = i
+		}
+		UNUSED(err)
+	}
+	shortlist = removeElementFromArray(shortlist, root_index)
+	return shortlist
+}
+
+func removeElementFromArray(shortlist []kademlia.Contact, index int) []kademlia.Contact {
+	return append(shortlist[:index], shortlist[index+1:]...)
+
 }
 
 func return_last_number_of_ipadress() int {
