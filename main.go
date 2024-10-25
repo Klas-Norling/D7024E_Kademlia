@@ -323,6 +323,36 @@ func removeElementFromArray(shortlist []kademlia.Contact, index int) []kademlia.
 
 }
 
+func fixPortInShortlist(shortlist []kademlia.Contact) []kademlia.Contact {
+	var root_index int
+	for i := range shortlist {
+		fmt.Println(shortlist[i].Address)
+		split := strings.Split(shortlist[i].Address, ":")
+		ipaddress := split[0]
+		spliceIp := strings.Split(ipaddress, ".")
+		last_number_in_ip, err := strconv.Atoi(spliceIp[3])
+		new_portnumber := 8080 + last_number_in_ip
+		new_ip := ipaddress + ":" + strconv.Itoa(new_portnumber)
+		shortlist[i].Address = new_ip
+		if ipaddress == "172.16.238.10" {
+			shortlist[i].Address = "172.16.238.10:8080"
+		}
+		fmt.Println("returnipaddress: ", returnIpAddress())
+		if returnIpAddress() == new_ip {
+			fmt.Println("In returnipadress if statement")
+			root_index = i
+		}
+		UNUSED(err)
+	}
+	shortlist = removeElementFromArray(shortlist, root_index)
+	return shortlist
+}
+
+func removeElementFromArray(shortlist []kademlia.Contact, index int) []kademlia.Contact {
+	return append(shortlist[:index], shortlist[index+1:]...)
+
+}
+
 func return_last_number_of_ipadress() int {
 	//fetch our ip address
 	hostname, err1 := os.Hostname()
