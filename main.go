@@ -78,6 +78,7 @@ func test(contact_root *kademlia.Contact, contact_own *kademlia.Contact) {
 
 }
 
+/*
 func test_nodelookup() {
 	c1 := make(chan string)
 	//numberofreplicas := 0
@@ -119,7 +120,7 @@ func test_nodelookup() {
 		y := <-c1
 		fmt.Println(y)
 	}
-}
+}*/
 
 func generateHashForRootNode() string {
 	//hash our ip address
