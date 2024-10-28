@@ -19,7 +19,7 @@ services:
     image: kadlab # Make sure your Docker image has this name.
     deploy:
       mode: replicated
-      replicas: 3
+      replicas: 25
     networks:
       - kademlia_network
 

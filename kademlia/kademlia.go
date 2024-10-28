@@ -43,6 +43,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 	value, exists := kademlia.data[hash]
 	fmt.Println("hash value: ", hash)
+	fmt.Println(kademlia.data)
 	new_hash := NewKademliaID(hash)
 
 	if exists {
@@ -62,10 +63,17 @@ func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 			contact := closest_contacts[i]
 			data := kademlia.network.SendFindDataMessage(hash, contact)
 
-			fmt.Println("Stored value: ", string(data))
+			if Hash(data) == hash {
+				fmt.Println("is the hash true:", Hash(data), " ==? ", hash)
+				fmt.Println("Stored value: ", data)
+				fmt.Println("value fetched from:", contact.Address)
+				bytes_in_data := []byte(data)
+				kademlia.Store(bytes_in_data)
+				break
+			}
 
 		}
-		kademlia.Store(data)
+
 		//remove UNUSED
 		UNUSED(closest_contacts)
 
@@ -74,10 +82,19 @@ func (kademlia *Kademlia) LookupData(hash string) (data []byte) {
 	return value
 }
 
+func Hash(data string) string {
+	byte_data := []byte(data)
+	hash := sha1.New()
+	hash.Write(byte_data)
+	sha1_data := hex.EncodeToString(hash.Sum(nil))
+	return sha1_data
+}
+
 // Takes data and hashes it to a 160 bit key then converts into hexadecimal
 // Note: Need to add a handle RPC file seperates lookupdata, store and lookupcontact
 func (kademlia *Kademlia) Store(data []byte) {
 	fmt.Println("hellostore")
+	fmt.Println("data in store:", data)
 	hash := sha1.New()
 	hash.Write(data)
 	sha1_data := hex.EncodeToString(hash.Sum(nil))

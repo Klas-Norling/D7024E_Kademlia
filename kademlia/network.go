@@ -76,7 +76,7 @@ func decodeContactsFromBytes(data []byte) ([]Contact, error) {
 	return contacts, nil
 }
 
-func NewListenFunc(ip string, rt *RoutingTable) {
+func NewListenFunc(ip string, rt *RoutingTable, kad *Kademlia) {
 
 	ip, port := getIpPort(ip)
 	fmt.Println("Listen Listening on ip and port", ip, port)
@@ -98,7 +98,7 @@ func NewListenFunc(ip string, rt *RoutingTable) {
 		}
 		//	fmt.Println("HELLO2")
 		//go RPC_handler(conn, rt)
-		RPC_handler(conn, rt)
+		RPC_handler(conn, rt, kad)
 
 		fmt.Println("Listen Listening on ip and port", ip, port)
 		//	time.Sleep(3 * time.Second)
@@ -107,7 +107,7 @@ func NewListenFunc(ip string, rt *RoutingTable) {
 
 }
 
-func RPC_handler(conn net.Conn, rt *RoutingTable) {
+func RPC_handler(conn net.Conn, rt *RoutingTable, kademlia *Kademlia) {
 	//
 	old_address := conn.RemoteAddr().String()
 	address, ip_port := getdecrementIpPort(old_address)
@@ -133,7 +133,6 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	case "store":
 		// Initialize or reset the store
 		fmt.Println("HELLO")
-		kademlia := InitializeNode()
 
 		address := conn.RemoteAddr().String()
 		fmt.Println("ipaddr:" + ipaddr)
@@ -192,7 +191,7 @@ func RPC_handler(conn net.Conn, rt *RoutingTable) {
 	case "find_value":
 
 		address := conn.RemoteAddr().String()
-		data := switch_case_find_value(address, ipaddr, rt)
+		data := switch_case_find_value(address, ipaddr, rt, kademlia)
 		fmt.Println("datavalue:", string(data))
 		/*
 			kademlia := InitializeNode()
@@ -239,13 +238,13 @@ func switch_case_find_node(newip_forsender string, ipaddr string, newport_forsen
 	return contacts, contact
 }
 
-func switch_case_find_value(address string, ipaddr string, rt *RoutingTable) []byte {
-	kademlia := InitializeNode()
+func switch_case_find_value(address string, ipaddr string, rt *RoutingTable, kademlia *Kademlia) []byte {
+
 	//id := NewKademliaID(address)
 	id := NewKademliaID(generateHashforNode(address))
 	contact := NewContact(id, address)
 	rt.AddContact(contact)
-	data := kademlia.LookupData(generateHashforNode(ipaddr))
+	data := kademlia.LookupData(ipaddr)
 	return data
 
 }
@@ -309,53 +308,6 @@ func InitiateSender(dst_address string, data []byte, rt *RoutingTable, c chan []
 	defer conn.Close()
 
 }
-
-/*
-func InitiateSenderForPong(dst_address string, data []byte, rt *RoutingTable, c chan string) {
-	address := returnIpAddress()
-
-	ip, port := getNewIpPort(address)
-	fmt.Println("in initiate sender address: ", address, " Port: ", port)
-
-	fmt.Println("hello")
-	dialer := &net.Dialer{
-		LocalAddr: &net.TCPAddr{
-			IP:   net.ParseIP(ip),
-			Port: port,
-		},
-	}
-	fmt.Println("hello")
-	conn, err := dialer.Dial("tcp", dst_address)
-	fmt.Println("hello")
-	if err != nil {
-		fmt.Println("Error caught: ", err)
-		defer conn.Close()
-
-	} else {
-		fmt.Println(dst_address)
-		conn.Write(data)
-		tmp := make([]byte, 2048)
-		fmt.Println("hello1")
-		time.Sleep(3 * time.Second)
-		n, err := conn.Read(tmp)
-
-		receivedString := string(tmp[:n])
-		fmt.Println("hello2")
-
-		fmt.Println("HLLO")
-		UNUSED(err)
-
-		return_contacts := receivedString
-		fmt.Println("HLLO2")
-		c <- return_contacts
-		fmt.Println("HLLO1")
-
-	}
-	defer conn.Close()
-
-	fmt.Println("HELLO???")
-
-}*/
 
 func SendPingMessage(contact_root *Contact, contact_own *Contact) {
 
@@ -485,7 +437,7 @@ func (network *Network) SendFindDataMessage(hash string, contact Contact) string
 		UNUSED(err)
 		receivedString := string(tmp[:n])
 		conn.Close()
-
+		fmt.Println("recievedString: ", receivedString)
 		return receivedString
 
 	}
@@ -527,3 +479,5 @@ func (network *Network) SendStoreMessage(data string, contact Contact) {
 //docker exec -it new_kadem-root_node-1 /bin/sh
 
 //./command.sh file.txt "put 1234klas"
+
+//1b3e6265a6e5d22d163130fc77ceed97776d9eda

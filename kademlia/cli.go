@@ -42,6 +42,7 @@ func inputHandler(input []string, rt *RoutingTable, kad *Kademlia) {
 		for i := 0; i < len(contacts); i++ {
 			kad.network.SendStoreMessage(input[1], contacts[i])
 		}
+		fmt.Println("the contacts in put: ", contacts)
 		UNUSED(contacts)
 
 	case "get":

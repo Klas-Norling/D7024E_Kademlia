@@ -38,17 +38,18 @@ func main() {
 		fmt.Println(returnIpAddress())
 
 		//rt.AddContact(root_contact)
-		//time.Sleep(time.Second * 3)
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Second * 3)
+
 		kademlia.SendPingMessage(&root_contact, &contact)
-		time.Sleep(3 * time.Second)
+		time.Sleep(15 * time.Second)
 		Join(&kad)
-		go kademlia.NewListenFunc(returnIpAddress(), &rt)
+		go kademlia.Cli(&kad)
+		go kademlia.NewListenFunc(returnIpAddress(), &rt, &kad)
 
 	} else {
 
 		go kademlia.Cli(&kad)
-		go kademlia.NewListenFunc(returnIpAddress(), &rt)
+		go kademlia.NewListenFunc(returnIpAddress(), &rt, &kad)
 		time.Sleep(time.Second * 3)
 		closest_contacts := rt.FindClosestContacts(root_node_id, 20)
 		fmt.Println("HELLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO: ", closest_contacts)
@@ -77,50 +78,6 @@ func test(contact_root *kademlia.Contact, contact_own *kademlia.Contact) {
 	}
 
 }
-
-/*
-func test_nodelookup() {
-	c1 := make(chan string)
-	//numberofreplicas := 0
-	//kademlia.Listen("172.16.238.10", 8080, &numberofreplicas, rt)
-	root_node_id := kademlia.NewKademliaID(generateHashForRootNode())
-	root_ipaddress := "172.16.238.10:8080"
-	root_contact := kademlia.NewContact(root_node_id, root_ipaddress)
-
-	node_id := kademlia.NewKademliaID(GenerateHashforNode())
-	ipaddress := returnIpAddress()
-
-	//ip, port := getIpPort(ipaddress)
-	contact := kademlia.NewContact(node_id, ipaddress)
-	rt := kademlia.NewRoutingTable(contact)
-	rt.AddContact(root_contact)
-
-	go kademlia.NewListenFunc(ipaddress, rt)
-
-	//sendingstring := ([]byte("find_node" + ";" + ipaddress))
-	//fmt.Println(ipaddress)
-	time.Sleep(3 * time.Second)
-	stringmsg := []byte("ping;p")
-
-	fmt.Println("IPADDRRRRRRRRRRRRRRRRR", returnIpAddress())
-
-	if returnIpAddress() != "172.16.238.10:8080" && returnIpAddress() == "172.16.238.3:8083" {
-		fmt.Println("test_nodelookup, before sendpingmessage")
-		time.Sleep(1 * time.Second)
-		fmt.Println("HOW MANY TIMES")
-		go kademlia.InitiateSenderForPong(contact.Address, stringmsg, rt, c1)
-		y := <-c1
-		fmt.Println(y)
-		contacts := nodelookup_func("172.16.238.2:8082", rt)
-		fmt.Println(contacts)
-
-	} else if returnIpAddress() != "172.16.238.10:8080" {
-		go kademlia.InitiateSenderForPong(contact.Address, stringmsg, rt, c1)
-		fmt.Println("HOW MANY TIMES")
-		y := <-c1
-		fmt.Println(y)
-	}
-}*/
 
 func generateHashForRootNode() string {
 	//hash our ip address
@@ -286,10 +243,14 @@ func nodelookup_func(target_address string, rt *kademlia.RoutingTable) []kademli
 		}
 
 	}
-	array := fixPortInShortlist(shortlist.GetContacts(4))
+	array := fixPortInShortlist(shortlist.GetContacts(20))
 
 	fmt.Println("Closest contacts final ound:", array)
-
+	fmt.Println("before foorloop", rt.FindClosestContacts(kademlia.NewKademliaID(GenerateHashforNode()), 4))
+	for i := range array {
+		rt.AddContact(array[i])
+	}
+	fmt.Println("before foorloop", rt.FindClosestContacts(kademlia.NewKademliaID(GenerateHashforNode()), 4))
 	return closest_contacts
 }
 

@@ -59,6 +59,7 @@ func TestEncodeDecodePerson(t *testing.T) {
 }
 
 func TestSwitch_case_find_value(t *testing.T) {
+	kademlia := InitializeNode()
 	rt := NewRoutingTable(NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 	rt.AddContact(NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8001"))
 	rt.AddContact(NewContact(NewKademliaID("1111111100000000000000000000000000000000"), "localhost:8002"))
@@ -73,7 +74,7 @@ func TestSwitch_case_find_value(t *testing.T) {
 	rt.AddContact(NewContact(NewKademliaID("1111111400000000000000000000000000000000"), "localhost:8002"))
 	rt.AddContact(NewContact(NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002"))
 	ipaddr := "172.16.238.10:8080"
-	data := switch_case_find_value(ipaddr, ipaddr, rt)
+	data := switch_case_find_value(ipaddr, ipaddr, rt, &kademlia)
 	fmt.Println("FINDERS", data)
 }
 func TestSwitch_case_find_node(t *testing.T) {
